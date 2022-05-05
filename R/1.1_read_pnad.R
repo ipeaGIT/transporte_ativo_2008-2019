@@ -1,3 +1,4 @@
+666 - add weighted_quantile
 # Load libraries -----
 
 # https://www.ibge.gov.br/estatisticas/sociais/educacao/9127-pesquisa-nacional-por-amostra-de-domicilios.html?edicao=18338&t=microdados
@@ -276,6 +277,8 @@ table(pnad2008$decileBR) #Numero de casos dentro de cada Decil tem que ser igual
 
 
 # Create  var. income quintile of Monthly household income per capitade
+
+
 pnad2008[, quintileBR:= as.numeric( cut(v4742, breaks=quantile(v4742,
                                                                probs=seq(0, 1, by=0.2), na.rm=T),
                                         include.lowest= TRUE, labels=1:5))]
