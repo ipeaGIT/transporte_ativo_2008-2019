@@ -3,12 +3,10 @@
 # https://www.ibge.gov.br/estatisticas/sociais/educacao/9127-pesquisa-nacional-por-amostra-de-domicilios.html?edicao=18338&t=microdados
 rm(list=ls())
 gc(reset=TRUE)
-library(PNADcIBGE) # devtools::install_github("Gabriel-Assuncao/PNADcIBGE")
-library(survey)
-library(srvyr)
 library(microdadosBrasil) # devtools::install_github("lucasmation/microdadosBrasil")
-# # Downloading data
-# source("R/0.1_parse_sasci.R") #
+library(data.table)
+library(magrittr)
+library(SAScii)
 
 # Read data ----
 
@@ -46,6 +44,7 @@ mycolsPES <- c( "V0101", # Ano
                 "V0404", # cor ou raca
                 "V4803", # Years of schooling
                 "V4745", # Nivel de instrucao mais elevado alcancado (todas as pessoas)
+                "V4741", # Numeo de componentes familia - 01 a 30 pessoas
                 "V4727", # Codigo de area censitaria
                 "V9005", # Number of jobs
                 "V4805", # Condicao de ocupacao na semana de referencia para
@@ -80,6 +79,7 @@ mycolsDOM <- c("V0101", # year
                "V0102", # Numero de controle
                "V0103", # Numero de serie
                "V0105", # Total de moradores
+               "V0106", # Total de moradores + 10 de anos
                #"V0403", # Family number 99999 not found 
                #"V4729", # Person Weight 99999 not found
                #"V4732", # Family Weight 99999 not found
@@ -110,17 +110,21 @@ tmp_dom <- tmp_dom[,.SD,.SDcols = mycolsDOM]
 # Join IndiViduals and Household data sets
 names(tmp_pes)
 names(tmp_dom)
-pnad2008 <- tmp_pes[tmp_dom,on = "V0102"]
 table(tmp_pes$V0102)
-pnad2008 <- data.table::merge.data.table(x = tmp_pes
+#    V0101    V0102 V0103 UF
+#1:   2008 11000015   001 11
+# tmp_dom[V0101 == "2008" & V0102 == "11000015" & V0103 == "001" & UF == "11"] %>% str()
+# tmp_pes[V0101 == "2008" & V0102 == "11000015" & V0103 == "001" & UF == "11"] %>% str()
+
+pnad2008_raw <- data.table::merge.data.table(x = tmp_pes
                                          ,y = tmp_dom
                                          , by = c("V0101", "V0102", "V0103","UF")
-                                         , all = TRUE)
+                                         , all = FALSE)
 
 # Clean memory
-rm(list=setdiff(ls(), c("pnad2008", "pnad2008dom")))
+rm(list=setdiff(ls(), c("pnad2008_raw")))
 gc(reset = T)
-
+pnad2008 <- data.table::copy(pnad2008_raw)
 
 
 
@@ -165,7 +169,7 @@ pnad2008[ , dummyvehicle := factor(dummyvehicle, levels = c(1,0),
 
 
 # Create  age groups with 5y intervals
-pnad2008[v8005<5, agegroup := "0-4"]
+pnad2008[v8005>00 & v8005<05, agegroup := "0-4"]
 pnad2008[v8005>04 & v8005<14, agegroup := "5-13"]
 pnad2008[v8005>13 & v8005<18, agegroup := "14-17"]
 pnad2008[v8005>17 & v8005<25, agegroup := "18-24"]
@@ -178,33 +182,57 @@ pnad2008[v8005>49 & v8005<55, agegroup := "50-54"]
 pnad2008[v8005>54 & v8005<60, agegroup := "55-59"]
 pnad2008[v8005>59 & v8005<65, agegroup := "60-64"]
 pnad2008[v8005>64, agegroup := "65+"]
-table(pnad2008$agegroup)
+table(pnad2008$agegroup,exclude = FALSE)
 
 
 # Recode Urban vs Rural variable
 pnad2008[v4105<4, urban := "Urban"]
 pnad2008[v4105>3 & v4105<9, urban := "Rural"]
-table(pnad2008$urban)
+table(pnad2008$urban,exclude = FALSE)
 
 
 # Recode Sex variable, make it compatible with PNAD
-pnad2008[v0302 == 2, v0302 := "Masculino"]
-pnad2008[v0302 == 4, v0302 := "Feminino"]
-table(pnad2008$v0302)
+pnad2008[v0302 == 2, sexo := "Masculino"]
+pnad2008[v0302 == 4, sexo := "Feminino"]
+table(pnad2008$sexo,exclude = FALSE)
 
 # Recode Education variable, make it compatible with PNAD
-pnad2008[v4745 == 1, v4745 := "Sem instrução"]
-pnad2008[v4745 == 2, v4745 := "Fundamental incompleto ou equivalente"]
-pnad2008[v4745 == 3, v4745 := "Fundamental completo ou equivalente"]
-pnad2008[v4745 == 4, v4745 := "Médio incompleto ou equivalente"]
-pnad2008[v4745 == 5, v4745 := "Médio completo ou equivalente"]
-pnad2008[v4745 == 6, v4745 := "Superior incompleto ou equivalente"]
-pnad2008[v4745 == 7, v4745 := "Superior completo"]
-pnad2008[v4745 == 8, v4745 := NA]
+pnad2008[v4745 == 1, edugroup_large := "Sem instrução"]
+pnad2008[v4745 == 2, edugroup_large := "Fundamental incompleto ou equivalente"]
+pnad2008[v4745 == 3, edugroup_large := "Fundamental completo ou equivalente"]
+pnad2008[v4745 == 4, edugroup_large := "Médio incompleto ou equivalente"]
+pnad2008[v4745 == 5, edugroup_large := "Médio completo ou equivalente"]
+pnad2008[v4745 == 6, edugroup_large := "Superior incompleto ou equivalente"]
+pnad2008[v4745 == 7, edugroup_large := "Superior completo"]
+pnad2008[v4745 == 8, edugroup_large := NA]
 
-table(pnad2008$v4745)
+table(pnad2008$edugroup_large,exclude = FALSE)
 
+# Educational groups (ajuste para PNS)
+pnad2008[v4745 %in% c(1,2), edugroup := "Sem instrução + Fundamental incompleto"]
+pnad2008[v4745 %in% c(3,4), edugroup := "Fundamental completo"]
+pnad2008[v4745 %in% c(5,6), edugroup := "Médio completo"]
+pnad2008[v4745 == 7, edugroup := "Superior completo"]
 
+table(pnad2008$edugroup,exclude = FALSE)
+
+# Cor ou raca
+# V0404	4	Cor ou raça	
+#       2	Branca
+#       4	Preta
+#       6	Amarela
+#       8	Parda
+#       0	Indígena
+#       9	Sem declaração
+
+pnad2008[,v0404 := as.character(v0404)]
+pnad2008[v0404 == "2", raca := "Branca"]
+pnad2008[v0404 == "4", raca := "Preta"]
+pnad2008[v0404 == "6", raca := "Amarela"]
+pnad2008[v0404 == "8", raca := "Parda"]
+pnad2008[v0404 == "0", raca := "Indígena"]
+pnad2008[v0404 == "9", raca :=  NA]
+table(pnad2008$raca,exclude = FALSE)
 
 # Recode State variable, make it compatible with PNAD
 pnad2008[uf == 11, uf_name :="Rondonia"]
@@ -236,7 +264,35 @@ pnad2008[uf == 52, uf_name :="Goias"]
 pnad2008[uf == 53, uf_name :="Federal District"]
 table(pnad2008$uf_name)
 
-
+# Recode State variable, make it compatible with PNAD
+pnad2008[uf == 11, uf := "RO"]
+pnad2008[uf == 12, uf := "AC"]
+pnad2008[uf == 13, uf := "AM"]
+pnad2008[uf == 14, uf := "RR"]
+pnad2008[uf == 15, uf := "PA"]
+pnad2008[uf == 16, uf := "AP"]
+pnad2008[uf == 17, uf := "TO"]
+pnad2008[uf == 21, uf := "MA"]
+pnad2008[uf == 22, uf := "PI"]
+pnad2008[uf == 23, uf := "CE"]
+pnad2008[uf == 24, uf := "RN"]
+pnad2008[uf == 25, uf := "PB"]
+pnad2008[uf == 26, uf := "PE"]
+pnad2008[uf == 27, uf := "AL"]
+pnad2008[uf == 28, uf := "AL"]
+pnad2008[uf == 29, uf := "BA"]
+pnad2008[uf == 31, uf := "MG"]
+pnad2008[uf == 32, uf := "ES"]
+pnad2008[uf == 33, uf := "RJ"]
+pnad2008[uf == 35, uf := "SP"]
+pnad2008[uf == 41, uf := "PR"]
+pnad2008[uf == 42, uf := "SC"]
+pnad2008[uf == 43, uf := "RS"]
+pnad2008[uf == 50, uf := "MS"]
+pnad2008[uf == 51, uf := "MT"]
+pnad2008[uf == 52, uf := "GO"]
+pnad2008[uf == 53, uf := "DF"]
+table(pnad2008$uf)
 
 # Create variable Metropolitan area
 pnad2008[v4727 !=1, metro := "Restante das UF"]
@@ -250,81 +306,135 @@ pnad2008[uf == 35 & v4727 == 1, metro := "São Paulo"]
 pnad2008[uf == 41 & v4727 == 1, metro := "Curitiba"]
 pnad2008[uf == 43 & v4727 == 1, metro := "Porto Alegre"]
 pnad2008[uf == 53 & v4727 == 1, metro := "Distrito Federal"]
-table(pnad2008$metro)
+table(pnad2008$metro,exclude=FALSE)
 
 gc(reset = T)
 
+# v1410  Costuma ir a pé ou de bicicleta de casa para o trabalho
+# 2	Sim
+# 4	Não
+# "" - Não aplicável 
+#
+# V1411	11	Tempo gasto para ir e voltar do trabalho
+# 1	Menos de 10 minutos
+# 2	10 a 19 minutos
+# 3	20 a 29 minutos
+# 4	30 a 44 minutos
+# 5	45 a 59 minutos
+# 6	60 minutos ou mais 
+# Não aplicável
+class(pnad2008$v1411)
+pnad2008[,actv_commutetime_00to09 := fifelse(v1411 == "1" & v1410 == "2",1,0)] # Menos de 10 minutos
+pnad2008[,actv_commutetime_10to19 := fifelse(v1411 == "2" & v1410 == "2",1,0)] # 10 a 19 minutos
+pnad2008[,actv_commutetime_20to29 := fifelse(v1411 == "3" & v1410 == "2",1,0)] # 20 a 29 minutos
+pnad2008[,actv_commutetime_30to44 := fifelse(v1411 == "4" & v1410 == "2",1,0)] # 30 a 44 minutos
+pnad2008[,actv_commutetime_45to59 := fifelse(v1411 == "5" & v1410 == "2",1,0)] # 45 a 59 minutos
+pnad2008[,actv_commutetime_from60 := fifelse(v1411 == "6" & v1410 == "2",1,0)] # 60 minutos ou mais 
+unique(pnad2008$v1410)
+
+# v9054
+# Tipo de estabelecimento ou onde era exercido o trabalho principal da semana de referência
+# 3	No domicílio em que morava
+pnad2008[v1410 == 0, v1410 := NA]
+pnad2008[v9054 == 3, v1410 := 4]
+pnad2008[v1410 == "2", v1410 := "Sim"]
+pnad2008[v1410 == "4", v1410 := "Não"]
+pnad2008[v1410 == "", v1410 := NA]
+table(pnad2008$v1410,exclude = FALSE)
+
+# V4610: Inversao da fracao
+pnad2008[,v4610 := as.numeric(v4610)]
+pnad2008[, pre_wgt  := v4619 * v4610]
+summary(pnad2008$pre_wgt)
+
+# vehicle ownership variable, make it compatible with PNAD
+# V2032	32a	Tem carro ou motocicleta de uso pessoal	2	Carro
+# 4	Motocicleta
+# 6	Carro e motocicleta
+# 8	Não 
+# Não aplicável
+
+unique(pnad2008$v2032)
+pnad2008[,v2032 := as.numeric(v2032)]
+pnad2008[v2032 == 2, vehicleOwnership := "Automóvel"]
+pnad2008[v2032 == 4, vehicleOwnership := "Motocicleta"]
+pnad2008[v2032 == 6, vehicleOwnership := "Automóvel + Motocicleta"]
+pnad2008[v2032 == 8, vehicleOwnership := "Nenhum"]
+pnad2008[is.na(v2032), vehicleOwnership := NA]
+table(pnad2008$v2032,exclude = FALSE)
+table(pnad2008$vehicleOwnership,exclude = FALSE)
 
 
-# Delete Missing values from Income variable (v4721 Monthly household income per capita)
-# to create new variable of income deciles
-#Antes da limpeza==391.868 obs. A lipeza tirou 11.573 cases -> 380.295
 
-# 99999
-# Joao:
+
+
+break()
+# Renda -----
 # "V4742", # Rendimento mensal domiciliar per capita 
 summary(pnad2008$v4742)
-pnad2008 <- pnad2008[v4742 > 0 & v4742 < 1.000e+11 & !is.na(v4742), ] #elimina observacoes missing na var.  de renda Dom per capita.
+# elimina observacoes missing na var.  de renda Dom per capita.
+pnad2008 <- pnad2008[v4742 == 999999999999,v4742 := NA] 
 summary(pnad2008$v4742)
 
 # Create  var. income deciles of Monthly household income per capitade
+# "v0105" - total moradores do domilicio
+# "V4742" - Rendimento mensal domiciliar per capita 
+# "v4741" - Número de componentes do domícilio (exclusive as pessoas cuja condição na unidade domiciliar era pensionista,
+# empregado doméstico ou parente do empregado doméstico) 
+pnad2008[,v4742 := as.numeric(v4742)]
+pnad2008[,v4741 := as.numeric(v4741)]
+pnad2008[,v0105 := as.numeric(v0105)]
 pnad2008[, decileBR:= as.numeric( cut(v4742
-                                      , breaks=Hmisc::wtd.quantile(x = v4721
-                                                                   , weights = V00292
-                                                                   ,probs=seq(0, 1, by=0.1), na.rm=T),
+                                      , breaks=Hmisc::wtd.quantile(x = v4742
+                                                                   , weights = v0105
+                                                                   ,probs=seq(0, 1, by=0.1)
+                                                                   , na.rm=T),
                                       include.lowest= TRUE, labels=1:10))]
 
-# Checking Table
-table(pnad2008$decileBR) #Numero de casos dentro de cada Decil tem que ser igual/proximo
-
-
-# Create  var. income quintile of Monthly household income per capitade
+pnad2008[,.N,by = decileBR]
 pnad2008[, quintileBR:= as.numeric( cut(v4742
-                                        , breaks = Hmisc::wtd.quantile(x = v4721
-                                                                       , weights = V00292
-                                                                       ,probs=seq(0, 1, by=0.2), na.rm=T),
+                                        , breaks=Hmisc::wtd.quantile(x = v4742
+                                                                     , weights = v0105
+                                                                     ,probs=seq(0, 1, by=0.2)
+                                                                     , na.rm=T),
                                         include.lowest= TRUE, labels=1:5))]
+pnad2008[,.N,by = quintileBR]
 
-
-# function to Create Quintile for different regions
+# different regions
 pnad2008[, quintileRegion:= as.numeric( cut(v4742
-                                            , breaks= Hmisc::wtd.quantile(x = v4721
-                                                                          , weights = V00292
-                                                                          ,probs=seq(0, 1, by=0.2), na.rm=T),
+                                            , breaks=Hmisc::wtd.quantile(x = v4742
+                                                                         , weights = v0105
+                                                                         ,probs=seq(0, 1, by=0.2)
+                                                                         , na.rm=T),
                                             include.lowest= TRUE, labels=1:5))
          ,by = region]
-
-
-# function to Create Quartile for different regions
-pnad2008[, quartileRegion:= as.numeric( cut(v4742, breaks = Hmisc::wtd.quantile(x = v4721
-                                                                                , weights = V00292,
-                                                                                probs=seq(0, 1, by=0.25), na.rm=T),
+pnad2008[,.N,by = quintileRegion]
+pnad2008[, quartileRegion:= as.numeric( cut(v4742
+                                            , breaks=Hmisc::wtd.quantile(x = v4742
+                                                                         , weights = v0105
+                                                                         ,probs=seq(0, 1, by=0.25)
+                                                                         , na.rm=T),
                                             include.lowest= TRUE, labels=1:4))
          ,by = region]
+pnad2008[,.N,by = quartileRegion]
 
-
-# function to Create Quintile for different Metro Areas
-pnad2008[, quintileMetro:= as.numeric( cut(v4742, breaks=Hmisc::wtd.quantile(x = v4721
-                                                                             , weights = V00292,
-                                                                             probs=seq(0, 1, by=0.2), na.rm=T),
+#  Metro Areas
+pnad2008[, quintileMetro:= as.numeric( cut(v4742
+                                           , breaks=Hmisc::wtd.quantile(x = v4742
+                                                                        , weights = v0105
+                                                                        ,probs=seq(0, 1, by=0.2)
+                                                                        , na.rm=T),
                                            include.lowest= TRUE, labels=1:5))
          ,by = metro]
-
-# function to Create Quartile for different Metro Areas
-pnad2008[, quartileMetro:= as.numeric( cut(v4742, breaks=Hmisc::wtd.quantile(x = v4721
-                                                                             , weights = V00292,
-                                                                             probs=seq(0, 1, by=0.25), na.rm=T),
+pnad2008[,.N,by = quintileMetro]
+pnad2008[, quartileMetro:= as.numeric( cut(v4742
+                                           , breaks=Hmisc::wtd.quantile(x = v4742
+                                                                        , weights = v0105
+                                                                        ,probs=seq(0, 1, by=0.25)
+                                                                        , na.rm=T),
                                            include.lowest= TRUE, labels=1:4))
          ,by = metro]
-
-# create regional income deciles, quintiles and quartiles
-# pnad2008 <- do.call(rbind, lapply(split(pnad2008, pnad2008[, region]), funQuintReg)) ; gc(reset = T)
-# pnad2008 <- do.call(rbind, lapply(split(pnad2008, pnad2008[, region]), funQuartReg)) ; gc(reset = T)
-# pnad2008 <- do.call(rbind, lapply(split(pnad2008, pnad2008[, metro]), funQuintMetro)) ; gc(reset = T)
-# pnad2008 <- do.call(rbind, lapply(split(pnad2008, pnad2008[, metro]), funQuartMetro)) ; gc(reset = T)
-
-head(pnad2008)
-
+pnad2008[,.N,by = quartileMetro]
 # 2-Way Frequency Table -  Numero de casos dentro de cada Decil tem que ser igual/proximo
 
 # table(pnad2008$quintileRegion, pnad2008$region)
@@ -341,76 +451,6 @@ pnad2008[,table(quintileMetro),by = c("metro")]
 pnad2008[,table(quartileMetro),by = c("metro")]
 pnad2008[,table(dummyvehicle),by = c("metro","quartileMetro")]
 
-# Create modified commute and Active Travel variables 
-# # Para pessoas ocupadas e q nao responderam a v1410, imputa q desloc ativo=0
-# # Porque?: Se faz isso apenas para elas contarem no denominador na hora de calcular a proporcao de desloca ativo
-# # inclui na var v1410 1.393 casos 
-
-# Impute commute time '0' no active commute IF person works from home
-pnad2008[v9054 == 3, v9057mod := NA]
-pnad2008[, v9057mod := as.numeric(v9057)]
-
-unique(pnad2008$v9057)
-unique(pnad2008$v9057mod)
-table(pnad2008$v9057mod)
-table(pnad2008$v9057)
-
-# Impute no active commute IF person works from home, or 
-# has a job but did not answered the question of active travel (probably due to health issues)
-pnad2008[v1410 == 0, v1410 :=NA]
-pnad2008[, v1410mod := ifelse(v9054 == 3, 4, as.numeric(v1410))]
-
-table(pnad2008$v1410)
-unique(pnad2008$v1410)
-table(pnad2008$v1410mod)
-unique(pnad2008$v1410mod)
-
-
-#  Impute active commute time '0' IF person works from home
-pnad2008[v1411 == 0, v1411 := NA]
-pnad2008[, v1411 := as.numeric(v1411)]
-pnad2008[, v1411mod := ifelse(v9054 == 3, NA, v1411)]
-
-table(pnad2008$v1411,exclude = FALSE)
-unique(pnad2008$v1411)
-table(pnad2008$v1411mod,exclude = FALSE)
-unique(pnad2008$v1411mod)
-
-
-# create indicator variable of ind. that practice active travel for > 30minutes when commuting to work
-unique(pnad2008$v1410)
-unique(pnad2008$v1410mod)
-pnad2008[v1410mod == 2 & v1411 > 3, actv_commutetime30 := 1]
-pnad2008[v1410mod == 2 & v1411 <= 3, actv_commutetime30 := 0]
-pnad2008[v1410mod == 1 | is.na(v1410mod), actv_commutetime30 := NA]
-table(pnad2008$actv_commutetime30,exclude = FALSE)
-
-
-# now create the pre-stratified weight to be used in all of the survey designs
-# V4619: Fator de sub-amostragem
-# V4610: Inversao da fracao
-pnad2008[,v4610 := as.numeric(v4610)]
-pnad2008[, pre_wgt  := v4619 * v4610]
-summary(pnad2008$pre_wgt)
-
-
-#Recode Active Travel variable P040 into string
-unique(pnad2008$v1410)
-pnad2008[v1410 == "2", v1410 := "Yes"]
-pnad2008[v1410 == "4", v1410 := "No"]
-pnad2008[v1410 == "", v1410 := NA]
-table(pnad2008$v1410,exclude = FALSE)
-
-# vehicle ownership variable, make it compatible with PNAD
-unique(pnad2008$v2032)
-pnad2008[,v2032 := as.numeric(v2032)]
-pnad2008[v2032 == 2, vehicleOwnership := "Automóvel"]
-pnad2008[v2032 == 4, vehicleOwnership := "Motocicleta"]
-pnad2008[v2032 == 6, vehicleOwnership := "Automóvel + Motocicleta"]
-pnad2008[v2032 == 8, vehicleOwnership := "Nenhum"]
-pnad2008[is.na(v2032), vehicleOwnership := NA]
-table(pnad2008$v2032,exclude = FALSE)
-table(pnad2008$vehicleOwnership,exclude = FALSE)
 
 names(pnad2008)
 
@@ -418,43 +458,43 @@ names(pnad2008)
 gc(reset = T) 
 
 # Recode Housegold DAta  ----------------
-
-
-tmp_dom[, year := 2008]
-colnames(tmp_dom) <- tolower(colnames(tmp_dom))
-tmp_dom[uf < 20, region := "Norte"]
-tmp_dom[uf > 20 & uf < 30, region := "Nordeste"]
-tmp_dom[uf > 30 & uf < 40, region := "Sudeste"]
-tmp_dom[uf > 40 & uf < 50, region := "Sul"]
-tmp_dom[uf > 50 & uf < 60, region := "Centro-Oeste"]
-table(tmp_dom$region)
-
-# Recode Urban vs Rural variable
-tmp_dom[v4105<4, urban := "Urban"]
-tmp_dom[v4105>3 & v4105<9, urban := "Rural"]
-table(tmp_dom$urban,exclude = FALSE)
-
-
-
-# vehicle ownership variable, make it compatible with PNAD
-unique(tmp_dom$v2032)
-tmp_dom[,v2032 := as.numeric(v2032)]
-tmp_dom[v2032 == 2, vehicleOwnership := "Automóvel"]
-tmp_dom[v2032 == 4, vehicleOwnership := "Motocicleta"]
-tmp_dom[v2032 == 6, vehicleOwnership := "Automóvel + Motocicleta"]
-tmp_dom[v2032 == 8, vehicleOwnership := "Nenhum"]
-tmp_dom[is.na(v2032), vehicleOwnership := NA]
-table(tmp_dom$v2032,exclude = FALSE)
-table(tmp_dom$vehicleOwnership,exclude = FALSE)
-
-# Create dummyvehicle
-unique(tmp_dom$v2032)
-tmp_dom[, v2032 := as.integer(v2032)]
-tmp_dom[v2032 %in% c(2,4,6), dummyvehicle := 1]
-tmp_dom[v2032 == 8, dummyvehicle := 0]
-table(tmp_dom$dummyvehicle,exclude = FALSE)
-tmp_dom[ , dummyvehicle := factor(dummyvehicle, levels = c(1,0),
-                                  labels = c("Yes","No"))]
+# 
+# 
+# tmp_dom[, year := 2008]
+# colnames(tmp_dom) <- tolower(colnames(tmp_dom))
+# tmp_dom[uf < 20, region := "Norte"]
+# tmp_dom[uf > 20 & uf < 30, region := "Nordeste"]
+# tmp_dom[uf > 30 & uf < 40, region := "Sudeste"]
+# tmp_dom[uf > 40 & uf < 50, region := "Sul"]
+# tmp_dom[uf > 50 & uf < 60, region := "Centro-Oeste"]
+# table(tmp_dom$region)
+# 
+# # Recode Urban vs Rural variable
+# tmp_dom[v4105<4, urban := "Urban"]
+# tmp_dom[v4105>3 & v4105<9, urban := "Rural"]
+# table(tmp_dom$urban,exclude = FALSE)
+# 
+# 
+# 
+# # vehicle ownership variable, make it compatible with PNAD
+# unique(tmp_dom$v2032)
+# tmp_dom[,v2032 := as.numeric(v2032)]
+# tmp_dom[v2032 == 2, vehicleOwnership := "Automóvel"]
+# tmp_dom[v2032 == 4, vehicleOwnership := "Motocicleta"]
+# tmp_dom[v2032 == 6, vehicleOwnership := "Automóvel + Motocicleta"]
+# tmp_dom[v2032 == 8, vehicleOwnership := "Nenhum"]
+# tmp_dom[is.na(v2032), vehicleOwnership := NA]
+# table(tmp_dom$v2032,exclude = FALSE)
+# table(tmp_dom$vehicleOwnership,exclude = FALSE)
+# 
+# # Create dummyvehicle
+# unique(tmp_dom$v2032)
+# tmp_dom[, v2032 := as.integer(v2032)]
+# tmp_dom[v2032 %in% c(2,4,6), dummyvehicle := 1]
+# tmp_dom[v2032 == 8, dummyvehicle := 0]
+# table(tmp_dom$dummyvehicle,exclude = FALSE)
+# tmp_dom[ , dummyvehicle := factor(dummyvehicle, levels = c(1,0),
+#                                   labels = c("Yes","No"))]
 
 # Save Pnad2008 files ------------
 
@@ -462,7 +502,7 @@ dir.create("../../data/transporte_ativo_2008-2019/")
 readr::write_rds(x = pnad2008
                  ,file = "../../data/transporte_ativo_2008-2019/pnad2008.rds"
                  ,compress = "gz")
-readr::write_rds(x = tmp_dom
-                 , file = "../../data/transporte_ativo_2008-2019/pnad2008dom.rds"
-                 ,compress = "gz")
+# readr::write_rds(x = tmp_dom
+#                  , file = "../../data/transporte_ativo_2008-2019/pnad2008dom.rds"
+#                  ,compress = "gz")
 
