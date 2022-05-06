@@ -28,7 +28,7 @@ sas_file <- parse.sasci_mod(sas_ri = sas_path_2013,beginline = 1)
 txt_path_2013 <- "../../data-raw/PNS/2013/PNS_2013.txt"
 pns2013dom <-   readr::read_fwf(file = txt_path_2013,
                                 col_positions = readr::fwf_widths(widths = dput(sas_file$width),
-                                                           col_names=(dput(sas_file$varname))),
+                                                                  col_names=(dput(sas_file$varname))),
                                 progress = interactive())
 
 
@@ -108,7 +108,7 @@ pns2013dom[A01817 == 2 & A020 == 0, v2032 := "Nenhum"] # 8
 pns2013dom[, dummyVehicle := data.table::fifelse(v2032 == "Nenhum", 0, 1)]
 
 pns2013dom[,dummyVehicle := factor(dummyVehicle, levels = c(1,0),
-                                  labels = c("Sim","Não"))]
+                                   labels = c("Sim","Não"))]
 
 # 3. Merge household and individual data sets---------
 
@@ -235,15 +235,15 @@ table(pns2013dom$v4745,exclude = FALSE)
 is.factor(pns2013dom$v4745)
 levels(pns2013dom$v4745)
 
-pns2013dom[, v4745 := factor(x = v4745
-                             , levels = c("Uneducated", "Incomplete primary school", 
-                                          "Complete primary school", "Incomplete high school",
-                                          "Complete high school", "Incomplete university degree",
-                                          "University degree")
-                             , labels = c("Sem instrução","Fundamental incompleto ou equivalente",
-                                          "Fundamental completo ou equivalente","Médio incompleto ou equivalente",
-                                          "Médio completo ou equivalente","Superior incompleto ou equivalente",
-                                          "Superior completo"))]
+# pns2013dom[, v4745 := factor(x = v4745
+#                              , levels = c("Uneducated", "Incomplete primary school", 
+#                                           "Complete primary school", "Incomplete high school",
+#                                           "Complete high school", "Incomplete university degree",
+#                                           "University degree")
+#                              , labels = c("Sem instrução","Fundamental incompleto ou equivalente",
+#                                           "Fundamental completo ou equivalente","Médio incompleto ou equivalente",
+#                                           "Médio completo ou equivalente","Superior incompleto ou equivalente",
+#                                           "Superior completo"))]
 
 # Educational groups
 pns2013dom[VDD004 < 3, edugroup := "Sem instrução + Fundamental incompleto"]
@@ -318,132 +318,184 @@ pns2013dom[V0026 == 2 , urban := "Rural"]
 # 3	RIDE (excluindo a capital)
 # 4	Resto da UF (Unidade da Federação, excluindo a região metropolitana e RIDE)
 pns2013dom[V0031 == 1 | V0031 == 2, v4727 := 1]
-pns2013dom[V0031>2, v4727 := 3]
+pns2013dom[V0031 > 2, v4727 := 3]
 
-9999999999
+
 # Create Variable Metropolitan area
+# V0031		Tipo de área	
 pns2013dom[V0031 == 4, metro := "Restante das UF"]
-pns2013dom[V0001 == 15 & V0031<3, metro := "Belém"]
-pns2013dom[V0001 == 23 & V0031<3, metro := "Fortaleza"]
-pns2013dom[V0001 == 26 & V0031<3, metro := "Recife"]
-pns2013dom[V0001 == 29 & V0031<3, metro := "Salvador"]
-pns2013dom[V0001 == 31 & V0031<3, metro := "Belo Horizonte"]
-pns2013dom[V0001 == 33 & V0031<3, metro := "Rio de Janeiro"]
-pns2013dom[V0001 == 35 & V0031<3, metro := "São Paulo"]
-pns2013dom[V0001 == 41 & V0031<3, metro := "Curitiba"]
-pns2013dom[V0001 == 43 & V0031<3, metro := "Porto Alegre"]
-pns2013dom[V0001 == 53 & V0031<3, metro := "Distrito Federal"]
-
-
-
+pns2013dom[V0001 == 15 & V0031 < 3, metro := "Belém"]
+pns2013dom[V0001 == 23 & V0031 < 3, metro := "Fortaleza"]
+pns2013dom[V0001 == 26 & V0031 < 3, metro := "Recife"]
+pns2013dom[V0001 == 29 & V0031 < 3, metro := "Salvador"]
+pns2013dom[V0001 == 31 & V0031 < 3, metro := "Belo Horizonte"]
+pns2013dom[V0001 == 33 & V0031 < 3, metro := "Rio de Janeiro"]
+pns2013dom[V0001 == 35 & V0031 < 3, metro := "São Paulo"]
+pns2013dom[V0001 == 41 & V0031 < 3, metro := "Curitiba"]
+pns2013dom[V0001 == 43 & V0031 < 3, metro := "Porto Alegre"]
+pns2013dom[V0001 == 53 & V0031 < 3, metro := "Distrito Federal"]
 
 # Recode Active Travel Variable, make it compatible with PNAD
-pns2013[P040==1 | P040==2, v1410 := "Sim"]
-pns2013[P040==3, v1410 := "Não"]
-table(pns2013$v1410)
+# P040	-	Para ir ou voltar do trabalho, o(a) Sr(a) faz algum trajeto a pé ou de bicicleta
+# 1	Sim, todo o trajeto
+# 2	Sim, parte do trajeto
+# 3	Não
+# Não aplicável
+
+pns2013dom[P040 == 1 | P040 == 2, v1410 := "Sim"]
+pns2013dom[P040 == 3, v1410 := "Não"]
+table(pns2013dom$v1410,exclude = FALSE)
 
 
 ### create indicator variable of ind. above 18yearsold that practice active travel for > 30minutes
 ## this is the definition used in table 3.4.1.1 of IBGE report
-pns2013[is.na(P04101), P04101 := 0][,P04101 := as.numeric(P04101)]
-pns2013[P04102 == ".", P04102 := 0][,P04102 := as.numeric(P04102)]
-pns2013[P04301 == ".", P04301 := 0][,P04301 := as.numeric(P04301)]
-pns2013[P04302 == ".", P04302 := 0][,P04302 := as.numeric(P04302)]
-pns2013[, actv_commutetime := ifelse( is.na(P04101),0, P04101 * 60 + P04102)] # Active commute time
-pns2013[, actv_traveltimehabacts := ifelse( is.na(P04301),0, P04301 * 60 + P04302)] #active travel time to habitual activities, such as going to or taking someone to school 
-pns2013[, total_actvtraveltime := actv_commutetime + actv_traveltimehabacts] ## total active travel time
-pns2013[, physicallyactive30 := ifelse(total_actvtraveltime >= 30,1,0)] # total active travel time >30 (1,0)
-pns2013[, physicallyactive15 := ifelse(total_actvtraveltime >= 15,1,0)] # total active travel time >15 (1,0)
-pns2013[, actv_commutetime30 := ifelse(actv_commutetime >= 30,1,0)] #commute time >30 (1,0)
-pns2013[, actv_commutetime15 := ifelse(actv_commutetime >= 15,1,0)] #commute time >30 (1,0)
+#
+# P04101	Quantas horas o(a) Sr(a) gasta para percorrer este trajeto a pé ou de bicicleta, 
+# considerando a ida e a volta do trabalho?
+# P04102	Quantos minutos o(a) Sr(a) gasta para percorrer este trajeto a pé ou de bicicleta,
+# considerando a ida e a volta do trabalho?
+# P04301	No dia que o(a) Sr(a) faz esta atividade, quantas horas o(a) Sr(a) gasta no 
+# deslocamento a pé ou de   bicicleta, considerando a ida e a volta?
+# P04302	P43	No dia que o(a) Sr(a) faz esta atividade, quantos minutos o(a) Sr(a) gasta
+# no deslocamento a pé ou de   bicicleta, considerando a ida e a volta?
 
-table(pns2013$P040)
-table(pns2013$actv_commutetime30)
+pns2013dom[is.na(P04101), P04101 := 0]
+pns2013dom[P04102 == ".", P04102 := 0]
+pns2013dom[P04301 == ".", P04301 := 0]
+pns2013dom[P04302 == ".", P04302 := 0]
+pns2013dom[,P04101 := as.numeric(P04101)]
+pns2013dom[,P04102 := as.numeric(P04102)]
+pns2013dom[,P04301 := as.numeric(P04301)]
+pns2013dom[,P04302 := as.numeric(P04302)]
+pns2013dom[, actv_commutetime := fifelse( is.na(P04101),0, P04101 * 60 + P04102)] # Active commute time
+#active travel time to habitual activities, such as going to or taking someone to school 
+pns2013dom[, actv_traveltimehabacts := fifelse( is.na(P04301),0, P04301 * 60 + P04302)]
+pns2013dom[, total_actvtraveltime := actv_commutetime + actv_traveltimehabacts] ## total active travel time
+pns2013dom[, physicallyactive30 := fifelse(total_actvtraveltime >= 30,1,0)] # total active travel time >30 (1,0)
+pns2013dom[, physicallyactive15 := fifelse(total_actvtraveltime >= 15,1,0)] # total active travel time >15 (1,0)
+pns2013dom[, actv_commutetime30 := fifelse(actv_commutetime >= 30,1,0)] #commute time >30 (1,0)
+pns2013dom[, actv_commutetime15 := fifelse(actv_commutetime >= 15,1,0)] #commute time >30 (1,0)
+
+table(pns2013dom$P040,exclude = FALSE)
+table(pns2013dom$actv_commutetime30,exclude = FALSE)
 
 
 # Recode Acctive Travel Variable P040 into string
-pns2013[, P040 := as.character(P040)]
-pns2013[P040==1, P040 := "Sim, todo o trajeto"]
-pns2013[P040==2, P040 := "Sim, parte do trajeto"]
-pns2013[P040==3, P040 :=  "Não"]
-table(pns2013$P040)
+pns2013dom[, P040 := as.character(P040)]
+pns2013dom[P040 == 1, P040 := "Sim, todo o trajeto"]
+pns2013dom[P040 == 2, P040 := "Sim, parte do trajeto"]
+pns2013dom[P040 == 3, P040 :=  "Não"]
+table(pns2013dom$P040,exclude = FALSE)
 
 
 ### 4.1 Income Variables ----
 
+# E01602	E16	Qual era o rendimento bruto mensal ou retirada que ________________ fazia normalmente nesse trabalho? - Valor em dinheiro (R$)
+# E01604	E16	Qual era o rendimento bruto mensal ou retirada que ________________ fazia normalmente nesse trabalho? - Valor estimado dos produtos ou mercadorias (R$)
+# E01802	E18	Qual era o rendimento bruto mensal ou retirada que ________________ fazia normalmente nesse(s) outro(s) trabalho(s)? - Valor em dinheiro (R$)
+# E01804	E18	Qual era o rendimento bruto mensal ou retirada que ________________ fazia normalmente nesse(s) outro(s) trabalho(s)? - Valor estimado dos produtos ou mercadorias (R$)
+# F00102	F1	Valor recebido em reais (F001)
+# F00702	F7	Valor recebido em reais (F007)
+# F00802	F8	Valor recebido em reais (F008)
+# VDF00102	F8	Valor recebido em reais (VDF001)
 
-colnames_income <-  c('E01602', 'E01604', 'E01802', 'E01804', 'F00102', 'F00702', 'F00802', 'VDF00102')
-pns2013[,(colnames_income) := lapply(.SD,as.numeric), .SDcols = colnames_income]
+colnames_income <-  c('E01602', 'E01604', 'E01802', 'E01804',
+                      'F00102', 'F00702', 'F00802', 'VDF00102')
+pns2013dom[,(colnames_income) := lapply(.SD,as.numeric)
+           , .SDcols = colnames_income]
+
+# to numeric
+pns2013dom[,VDC001 := as.numeric(VDC001)]
+summary(pns2013dom$VDC001)
+
+
 # Summary of income variables
 
-summary(pns2013$E01602)
-summary(pns2013$E01604)
-summary(pns2013$E01802)
-summary(pns2013$E01804)
-summary(pns2013$F00102)
-summary(pns2013$F00702)
-summary(pns2013$F00802)
-summary(pns2013$VDF00102)
+summary(pns2013dom$E01602)
+summary(pns2013dom$E01604)
+summary(pns2013dom$E01802)
+summary(pns2013dom$E01804)
+summary(pns2013dom$F00102)
+summary(pns2013dom$F00702)
+summary(pns2013dom$F00802)
+summary(pns2013dom$VDF00102)
+
 #  Household Income per Capita, compatible with PNAD 2008 data
-pns2013[ C004 <17 , v4721 := sum( E01602, E01604, E01802, E01804, F00102, F00702, F00802, VDF00102, na.rm = T) / VDC001,
-         by= .(V0001, V0024, UPA_PNS, V0006_PNS)] # sum all income sources
-summary(pns2013$v4721)
+# C004	C4	Condição no domicílio:
+
+pns2013dom[ C004 <17 , v4721 := sum( E01602, E01604, E01802,
+                                     E01804, F00102, F00702, 
+                                     F00802, VDF00102, na.rm = T) / VDC001,
+            by= .(V0001, V0024, UPA_PNS, V0006_PNS)] # sum all income sources
 
 
-summary(pns2013$v4721)
+summary(pns2013dom$v4721)
 # # >Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
 # # >  0     340      670    1140    1190  146000  130415 
 # 
 # # 1119 casos com RDPC igual a 0
-head(table(pns2013$v4721))
+head(table(pns2013dom$v4721))
 
 
 ########### Create income quantiles
 
-# Create  var. income deciles of Monthly household income per capitade
-pns2013[, decileBR:= as.numeric( cut(v4721, breaks=quantile(v4721,
-                                                            probs=seq(0, 1, by=0.1), na.rm=T),
-                                     include.lowest= TRUE, labels=1:10))]
+# Create  var. income deciles of Monthly household income per capita
+pns2013dom[, decileBR:= as.numeric( cut(v4721
+                                        , breaks = Hmisc::wtd.quantile(x = v4721
+                                                                       , weights = V00292
+                                                                       , probs = seq(0, 1, by=0.1)
+                                                                       , na.rm=T),
+                                        include.lowest = TRUE, labels = 1:10))]
 
 # Checking Table
-table(pns2013$decileBR) #Numero de casos dentro de cada Decil tem que ser igual/proximo
+table(pns2013dom$decileBR) #Numero de casos dentro de cada Decil tem que ser igual/proximo
 
 
 # Create  var. income quintile of Monthly household income per capitade
-pns2013[, quintileBR:= as.numeric( cut(v4721, breaks=quantile(v4721,
-                                                              probs=seq(0, 1, by=0.2), na.rm=T),
-                                       include.lowest= TRUE, labels=1:5))]
+pns2013dom[, quintileBR:= as.numeric( cut(v4721
+                                          , breaks = Hmisc::wtd.quantile(x = v4721
+                                                                         , weights = V00292
+                                                                         ,probs=seq(0, 1, by=0.2), na.rm=T),
+                                          include.lowest= TRUE, labels=1:5))]
 
-table(pns2013$quintileBR) #Numero de casos dentro de cada Decil tem que ser igual/proximo
+table(pns2013dom$quintileBR) #Numero de casos dentro de cada Decil tem que ser igual/proximo
 
 # function to Create Quintile for different regions
-pns2013[, quintileRegion:= as.numeric( cut(v4721, breaks=quantile(v4721,
-                                                                  probs=seq(0, 1, by=0.2), na.rm=T),
-                                           include.lowest= TRUE, labels=1:5)), by=region]
+pns2013dom[, quintileRegion:= as.numeric( cut(v4721
+                                              , breaks = Hmisc::wtd.quantile(x = v4721
+                                                                             , weights = V00292
+                                                                             ,probs=seq(0, 1, by=0.2), na.rm=T),
+                                              include.lowest= TRUE, labels=1:5)), by = region]
 
 
 # function to Create Quartile for different regions
-pns2013[, quartileRegion:= as.numeric( cut(v4721, breaks=quantile(v4721,
-                                                                  probs=seq(0, 1, by=0.25), na.rm=T),
-                                           include.lowest= TRUE, labels=1:4)), by=region]
+pns2013dom[, quartileRegion:= as.numeric( cut(v4721
+                                              , breaks = Hmisc::wtd.quantile(x = v4721
+                                                                             , weights = V00292
+                                                                             ,probs=seq(0, 1, by=0.25), na.rm=T),
+                                              include.lowest= TRUE, labels=1:4)), by = region]
 
 
 # function to Create Quintile for different Metro Areas
-pns2013[, quintileMetro:= as.numeric( cut(v4721,
-                                          breaks=quantile(v4721, probs=seq(0, 1, by=0.2), na.rm=T),
-                                          include.lowest= TRUE, labels=1:5)), by=metro]
+pns2013dom[, quintileMetro:= as.numeric( cut(v4721,
+                                             breaks = Hmisc::wtd.quantile(x = v4721
+                                                                          , weights = V00292
+                                                                          , probs = seq(0, 1, by=0.2), na.rm=T)
+                                             , include.lowest= TRUE, labels=1:5)), by = metro]
 
 # function to Create Quartile for different Metro Areas
-pns2013[, quartileMetro:= as.numeric( cut(v4721, breaks=quantile(v4721,
-                                                                 probs=seq(0, 1, by=0.25), na.rm=T),
-                                          include.lowest= TRUE, labels=1:4)), by=metro]
+pns2013dom[, quartileMetro:= as.numeric( cut(v4721
+                                             , breaks = Hmisc::wtd.quantile(x = v4721
+                                                                            , weights = V00292
+                                                                            , probs = seq(0, 1, by=0.25), na.rm=T),
+                                             include.lowest= TRUE, labels=1:4)), by = metro]
 
 
 
 # number of cases in each Region/Metro area by income quantile
 #Numero de casos dentro de cada Decil tem que ser igual/proximo
-table(pns2013$quintileRegion, pns2013$region)
-table(pns2013$quintileMetro, pns2013$metro)
+table(pns2013dom$quintileRegion, pns2013dom$region)
+table(pns2013dom$quintileMetro, pns2013dom$metro)
 gc(reset = T)
 #     
 
@@ -454,7 +506,7 @@ gc(reset = T)
 
 dir.create("data")
 dir.create("data/PNS")
-saveRDS(pns2013, file="./data/PNS/pns2013.Rds")
+saveRDS(pns2013dom, file="./data/PNS/pns2013.Rds")
 saveRDS(pns2013dom, file="./data/PNS/pns2013dom.Rds")
 saveRDS(pns2013pes, file="./data/PNS/pns2013pes.Rds")
 
