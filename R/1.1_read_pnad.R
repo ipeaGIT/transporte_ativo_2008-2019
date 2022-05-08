@@ -370,6 +370,11 @@ table(pnad2008$vehicleOwnership,exclude = FALSE)
 
 break()
 # Renda -----
+# V4721		Rendimento mensal domiciliar para todas as unidades domiciliares 
+# (exclusive o rendimento das pessoas cuja condição na unidade domiciliar era 
+# pensionista, empregado doméstico ou parente do empregado doméstico e das pessoas
+# de menos de 10 anos de idade)
+
 # "V4742", # Rendimento mensal domiciliar per capita 
 summary(pnad2008$v4742)
 # elimina observacoes missing na var.  de renda Dom per capita.
