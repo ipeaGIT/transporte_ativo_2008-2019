@@ -329,6 +329,7 @@ pns2019[,actv_commutetime_20to29 := fifelse(actv_commutetime >= 20 & actv_commut
 pns2019[,actv_commutetime_30to44 := fifelse(actv_commutetime >= 30 & actv_commutetime <= 44,1,0)] # 30 a 44 minutos
 pns2019[,actv_commutetime_45to59 := fifelse(actv_commutetime >= 45 & actv_commutetime <= 59,1,0)] # 45 a 59 minutos
 pns2019[,actv_commutetime_from60 := fifelse(actv_commutetime >= 60,1,0)] # 60 minutos ou mais 
+pns2019[,actv_commutetime_from30 := fifelse(actv_commutetime >= 30,1,0)] # 30 minutos ou mais 
 
 table(pns2019$P040,exclude = FALSE)
 table(pns2019$actv_commutetime_00to09,exclude = FALSE)
@@ -337,6 +338,7 @@ table(pns2019$actv_commutetime_20to29,exclude = FALSE)
 table(pns2019$actv_commutetime_30to44,exclude = FALSE)
 table(pns2019$actv_commutetime_45to59,exclude = FALSE)
 table(pns2019$actv_commutetime_from60,exclude = FALSE)
+table(pns2019$actv_commutetime_from30,exclude = FALSE)
 
 
 # Recode Acctive Travel Variable P040 into string
@@ -474,6 +476,6 @@ gc(reset = T)
 
 # Save modified files  ----------------
 
-saveRDS(pns2019, file="../../data/transporte_ativo_2008-2019/pns2019.Rds")
-
+readr::write_rds(x = pns2019,file =  "../../data/transporte_ativo_2008-2019/pns2019.Rds"
+                 , compress = "gz")
 

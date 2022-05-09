@@ -129,110 +129,10 @@ pnad2008 <- data.table::copy(pnad2008_raw)
 
 
 
-# Add VARiables to pnad2008 ---------------------
-
-# year variable     
-pnad2008[, year := 2008]
-colnames(pnad2008) <- tolower(colnames(pnad2008))
-
-# # Count variable     
-# pnad2008[, vcount := 1]
-# table(pnad2008$vcount)
-
-# Create Great Geographical Regions [data.table]
-pnad2008[uf < 20, region :="Norte"]
-pnad2008[uf > 19 & uf < 30, region :="Nordeste"]
-pnad2008[uf > 29 & uf < 40, region :="Sudeste"]
-pnad2008[uf > 39 & uf < 50, region :="Sul"]
-pnad2008[uf > 49 & uf < 60, region :="Centro-Oeste"]
-table(pnad2008$region)
+# Add VARiables ---------------------
 
 
-# Create age groups with bigger age interval
-pnad2008[v8005>=0 & v8005<18, AGE :="0-17"]
-pnad2008[v8005>17 & v8005<25, AGE :="18-24"]
-pnad2008[v8005>24 & v8005<35, AGE :="25-34"]
-pnad2008[v8005>34 & v8005<45, AGE :="35-44"]
-pnad2008[v8005>44 & v8005<55, AGE :="45-54"]
-pnad2008[v8005>54 & v8005<65, AGE :="55-64"]
-pnad2008[v8005>64,  AGE :="65+"]
-table(pnad2008$AGE)
-
-# Create dummyvehicle
-unique(pnad2008$v2032)
-pnad2008[, v2032 := as.integer(v2032)]
-pnad2008[v2032 %in% c(2,4,6), dummyvehicle := 1]
-pnad2008[v2032 == 8, dummyvehicle := 0]
-table(pnad2008$dummyvehicle,exclude = FALSE)
-pnad2008[ , dummyvehicle := factor(dummyvehicle, levels = c(1,0),
-                                   labels = c("Yes","No"))]
-
-
-# Create  age groups with 5y intervals
-pnad2008[v8005>00 & v8005<05, agegroup := "0-4"]
-pnad2008[v8005>04 & v8005<14, agegroup := "5-13"]
-pnad2008[v8005>13 & v8005<18, agegroup := "14-17"]
-pnad2008[v8005>17 & v8005<25, agegroup := "18-24"]
-pnad2008[v8005>24 & v8005<30, agegroup := "25-29"]
-pnad2008[v8005>29 & v8005<35, agegroup := "30-34"]
-pnad2008[v8005>34 & v8005<40, agegroup := "35-39"]
-pnad2008[v8005>39 & v8005<45, agegroup := "40-44"]
-pnad2008[v8005>44 & v8005<50, agegroup := "45-49"]
-pnad2008[v8005>49 & v8005<55, agegroup := "50-54"]
-pnad2008[v8005>54 & v8005<60, agegroup := "55-59"]
-pnad2008[v8005>59 & v8005<65, agegroup := "60-64"]
-pnad2008[v8005>64, agegroup := "65+"]
-table(pnad2008$agegroup,exclude = FALSE)
-
-
-# Recode Urban vs Rural variable
-pnad2008[v4105<4, urban := "Urban"]
-pnad2008[v4105>3 & v4105<9, urban := "Rural"]
-table(pnad2008$urban,exclude = FALSE)
-
-
-# Recode Sex variable, make it compatible with PNAD
-pnad2008[v0302 == 2, sexo := "Masculino"]
-pnad2008[v0302 == 4, sexo := "Feminino"]
-table(pnad2008$sexo,exclude = FALSE)
-
-# Recode Education variable, make it compatible with PNAD
-pnad2008[v4745 == 1, edugroup_large := "Sem instrução"]
-pnad2008[v4745 == 2, edugroup_large := "Fundamental incompleto ou equivalente"]
-pnad2008[v4745 == 3, edugroup_large := "Fundamental completo ou equivalente"]
-pnad2008[v4745 == 4, edugroup_large := "Médio incompleto ou equivalente"]
-pnad2008[v4745 == 5, edugroup_large := "Médio completo ou equivalente"]
-pnad2008[v4745 == 6, edugroup_large := "Superior incompleto ou equivalente"]
-pnad2008[v4745 == 7, edugroup_large := "Superior completo"]
-pnad2008[v4745 == 8, edugroup_large := NA]
-
-table(pnad2008$edugroup_large,exclude = FALSE)
-
-# Educational groups (ajuste para PNS)
-pnad2008[v4745 %in% c(1,2), edugroup := "Sem instrução + Fundamental incompleto"]
-pnad2008[v4745 %in% c(3,4), edugroup := "Fundamental completo"]
-pnad2008[v4745 %in% c(5,6), edugroup := "Médio completo"]
-pnad2008[v4745 == 7, edugroup := "Superior completo"]
-
-table(pnad2008$edugroup,exclude = FALSE)
-
-# Cor ou raca
-# V0404	4	Cor ou raça	
-#       2	Branca
-#       4	Preta
-#       6	Amarela
-#       8	Parda
-#       0	Indígena
-#       9	Sem declaração
-
-pnad2008[,v0404 := as.character(v0404)]
-pnad2008[v0404 == "2", raca := "Branca"]
-pnad2008[v0404 == "4", raca := "Preta"]
-pnad2008[v0404 == "6", raca := "Amarela"]
-pnad2008[v0404 == "8", raca := "Parda"]
-pnad2008[v0404 == "0", raca := "Indígena"]
-pnad2008[v0404 == "9", raca :=  NA]
-table(pnad2008$raca,exclude = FALSE)
+## Region ------
 
 # Recode State variable, make it compatible with PNAD
 pnad2008[uf == 11, uf_name :="Rondonia"]
@@ -310,66 +210,111 @@ table(pnad2008$metro,exclude=FALSE)
 
 gc(reset = T)
 
-# v1410  Costuma ir a pé ou de bicicleta de casa para o trabalho
-# 2	Sim
-# 4	Não
-# "" - Não aplicável 
-#
-# V1411	11	Tempo gasto para ir e voltar do trabalho
-# 1	Menos de 10 minutos
-# 2	10 a 19 minutos
-# 3	20 a 29 minutos
-# 4	30 a 44 minutos
-# 5	45 a 59 minutos
-# 6	60 minutos ou mais 
-# Não aplicável
-class(pnad2008$v1411)
-pnad2008[,actv_commutetime_00to09 := fifelse(v1411 == "1" & v1410 == "2",1,0)] # Menos de 10 minutos
-pnad2008[,actv_commutetime_10to19 := fifelse(v1411 == "2" & v1410 == "2",1,0)] # 10 a 19 minutos
-pnad2008[,actv_commutetime_20to29 := fifelse(v1411 == "3" & v1410 == "2",1,0)] # 20 a 29 minutos
-pnad2008[,actv_commutetime_30to44 := fifelse(v1411 == "4" & v1410 == "2",1,0)] # 30 a 44 minutos
-pnad2008[,actv_commutetime_45to59 := fifelse(v1411 == "5" & v1410 == "2",1,0)] # 45 a 59 minutos
-pnad2008[,actv_commutetime_from60 := fifelse(v1411 == "6" & v1410 == "2",1,0)] # 60 minutos ou mais 
-unique(pnad2008$v1410)
 
-# v9054
-# Tipo de estabelecimento ou onde era exercido o trabalho principal da semana de referência
-# 3	No domicílio em que morava
-pnad2008[v1410 == 0, v1410 := NA]
-pnad2008[v9054 == 3, v1410 := 4]
-pnad2008[v1410 == "2", v1410 := "Sim"]
-pnad2008[v1410 == "4", v1410 := "Não"]
-pnad2008[v1410 == "", v1410 := NA]
-table(pnad2008$v1410,exclude = FALSE)
+# Recode Urban vs Rural variable
+pnad2008[v4105<4, urban := "Urban"]
+pnad2008[v4105>3 & v4105<9, urban := "Rural"]
+table(pnad2008$urban,exclude = FALSE)
 
-# V4610: Inversao da fracao
-pnad2008[,v4610 := as.numeric(v4610)]
-pnad2008[, pre_wgt  := v4619 * v4610]
-summary(pnad2008$pre_wgt)
 
-# vehicle ownership variable, make it compatible with PNAD
-# V2032	32a	Tem carro ou motocicleta de uso pessoal	2	Carro
-# 4	Motocicleta
-# 6	Carro e motocicleta
-# 8	Não 
-# Não aplicável
+# year variable     
+pnad2008[, year := 2008]
+colnames(pnad2008) <- tolower(colnames(pnad2008))
 
+# # Count variable     
+# pnad2008[, vcount := 1]
+# table(pnad2008$vcount)
+
+# Create Great Geographical Regions [data.table]
+pnad2008[uf < 20, region :="Norte"]
+pnad2008[uf > 19 & uf < 30, region :="Nordeste"]
+pnad2008[uf > 29 & uf < 40, region :="Sudeste"]
+pnad2008[uf > 39 & uf < 50, region :="Sul"]
+pnad2008[uf > 49 & uf < 60, region :="Centro-Oeste"]
+table(pnad2008$region)
+
+## Socioeconomico -----
+
+# Create age groups with bigger age interval
+pnad2008[v8005>=0 & v8005<18, AGE :="0-17"]
+pnad2008[v8005>17 & v8005<25, AGE :="18-24"]
+pnad2008[v8005>24 & v8005<35, AGE :="25-34"]
+pnad2008[v8005>34 & v8005<45, AGE :="35-44"]
+pnad2008[v8005>44 & v8005<55, AGE :="45-54"]
+pnad2008[v8005>54 & v8005<65, AGE :="55-64"]
+pnad2008[v8005>64,  AGE :="65+"]
+table(pnad2008$AGE)
+
+# Create dummyvehicle
 unique(pnad2008$v2032)
-pnad2008[,v2032 := as.numeric(v2032)]
-pnad2008[v2032 == 2, vehicleOwnership := "Automóvel"]
-pnad2008[v2032 == 4, vehicleOwnership := "Motocicleta"]
-pnad2008[v2032 == 6, vehicleOwnership := "Automóvel + Motocicleta"]
-pnad2008[v2032 == 8, vehicleOwnership := "Nenhum"]
-pnad2008[is.na(v2032), vehicleOwnership := NA]
-table(pnad2008$v2032,exclude = FALSE)
-table(pnad2008$vehicleOwnership,exclude = FALSE)
+pnad2008[, v2032 := as.integer(v2032)]
+pnad2008[v2032 %in% c(2,4,6), dummyvehicle := 1]
+pnad2008[v2032 == 8, dummyvehicle := 0]
+table(pnad2008$dummyvehicle,exclude = FALSE)
+pnad2008[ , dummyvehicle := factor(dummyvehicle, levels = c(1,0),
+                                   labels = c("Yes","No"))]
 
 
+# Create  age groups with 5y intervals
+pnad2008[v8005>00 & v8005<05, agegroup := "0-4"]
+pnad2008[v8005>04 & v8005<14, agegroup := "5-13"]
+pnad2008[v8005>13 & v8005<18, agegroup := "14-17"]
+pnad2008[v8005>17 & v8005<25, agegroup := "18-24"]
+pnad2008[v8005>24 & v8005<30, agegroup := "25-29"]
+pnad2008[v8005>29 & v8005<35, agegroup := "30-34"]
+pnad2008[v8005>34 & v8005<40, agegroup := "35-39"]
+pnad2008[v8005>39 & v8005<45, agegroup := "40-44"]
+pnad2008[v8005>44 & v8005<50, agegroup := "45-49"]
+pnad2008[v8005>49 & v8005<55, agegroup := "50-54"]
+pnad2008[v8005>54 & v8005<60, agegroup := "55-59"]
+pnad2008[v8005>59 & v8005<65, agegroup := "60-64"]
+pnad2008[v8005>64, agegroup := "65+"]
+table(pnad2008$agegroup,exclude = FALSE)
 
 
+# Recode Sex variable, make it compatible with PNAD
+pnad2008[v0302 == 2, sexo := "Masculino"]
+pnad2008[v0302 == 4, sexo := "Feminino"]
+table(pnad2008$sexo,exclude = FALSE)
 
-break()
-# Renda -----
+# Recode Education variable, make it compatible with PNAD
+pnad2008[v4745 == 1, edugroup_large := "Sem instrução"]
+pnad2008[v4745 == 2, edugroup_large := "Fundamental incompleto ou equivalente"]
+pnad2008[v4745 == 3, edugroup_large := "Fundamental completo ou equivalente"]
+pnad2008[v4745 == 4, edugroup_large := "Médio incompleto ou equivalente"]
+pnad2008[v4745 == 5, edugroup_large := "Médio completo ou equivalente"]
+pnad2008[v4745 == 6, edugroup_large := "Superior incompleto ou equivalente"]
+pnad2008[v4745 == 7, edugroup_large := "Superior completo"]
+pnad2008[v4745 == 8, edugroup_large := NA]
+
+table(pnad2008$edugroup_large,exclude = FALSE)
+
+# Educational groups (ajuste para PNS)
+pnad2008[v4745 %in% c(1,2), edugroup := "Sem instrução + Fundamental incompleto"]
+pnad2008[v4745 %in% c(3,4), edugroup := "Fundamental completo"]
+pnad2008[v4745 %in% c(5,6), edugroup := "Médio completo"]
+pnad2008[v4745 == 7, edugroup := "Superior completo"]
+
+table(pnad2008$edugroup,exclude = FALSE)
+
+# Cor ou raca
+# V0404	4	Cor ou raça	
+#       2	Branca
+#       4	Preta
+#       6	Amarela
+#       8	Parda
+#       0	Indígena
+#       9	Sem declaração
+
+pnad2008[,v0404 := as.character(v0404)]
+pnad2008[v0404 == "2", raca := "Branca"]
+pnad2008[v0404 == "4", raca := "Preta"]
+pnad2008[v0404 == "6", raca := "Amarela"]
+pnad2008[v0404 == "8", raca := "Parda"]
+pnad2008[v0404 == "0", raca := "Indígena"]
+pnad2008[v0404 == "9", raca :=  NA]
+table(pnad2008$raca,exclude = FALSE)
+
 # V4721		Rendimento mensal domiciliar para todas as unidades domiciliares 
 # (exclusive o rendimento das pessoas cuja condição na unidade domiciliar era 
 # pensionista, empregado doméstico ou parente do empregado doméstico e das pessoas
@@ -462,44 +407,66 @@ names(pnad2008)
 # limpa memoria
 gc(reset = T) 
 
-# Recode Housegold DAta  ----------------
-# 
-# 
-# tmp_dom[, year := 2008]
-# colnames(tmp_dom) <- tolower(colnames(tmp_dom))
-# tmp_dom[uf < 20, region := "Norte"]
-# tmp_dom[uf > 20 & uf < 30, region := "Nordeste"]
-# tmp_dom[uf > 30 & uf < 40, region := "Sudeste"]
-# tmp_dom[uf > 40 & uf < 50, region := "Sul"]
-# tmp_dom[uf > 50 & uf < 60, region := "Centro-Oeste"]
-# table(tmp_dom$region)
-# 
-# # Recode Urban vs Rural variable
-# tmp_dom[v4105<4, urban := "Urban"]
-# tmp_dom[v4105>3 & v4105<9, urban := "Rural"]
-# table(tmp_dom$urban,exclude = FALSE)
-# 
-# 
-# 
-# # vehicle ownership variable, make it compatible with PNAD
-# unique(tmp_dom$v2032)
-# tmp_dom[,v2032 := as.numeric(v2032)]
-# tmp_dom[v2032 == 2, vehicleOwnership := "Automóvel"]
-# tmp_dom[v2032 == 4, vehicleOwnership := "Motocicleta"]
-# tmp_dom[v2032 == 6, vehicleOwnership := "Automóvel + Motocicleta"]
-# tmp_dom[v2032 == 8, vehicleOwnership := "Nenhum"]
-# tmp_dom[is.na(v2032), vehicleOwnership := NA]
-# table(tmp_dom$v2032,exclude = FALSE)
-# table(tmp_dom$vehicleOwnership,exclude = FALSE)
-# 
-# # Create dummyvehicle
-# unique(tmp_dom$v2032)
-# tmp_dom[, v2032 := as.integer(v2032)]
-# tmp_dom[v2032 %in% c(2,4,6), dummyvehicle := 1]
-# tmp_dom[v2032 == 8, dummyvehicle := 0]
-# table(tmp_dom$dummyvehicle,exclude = FALSE)
-# tmp_dom[ , dummyvehicle := factor(dummyvehicle, levels = c(1,0),
-#                                   labels = c("Yes","No"))]
+## Mobility ------
+
+
+# v1410  Costuma ir a pé ou de bicicleta de casa para o trabalho
+# 2	Sim
+# 4	Não
+# "" - Não aplicável 
+#
+# V1411	11	Tempo gasto para ir e voltar do trabalho
+# 1	Menos de 10 minutos
+# 2	10 a 19 minutos
+# 3	20 a 29 minutos
+# 4	30 a 44 minutos
+# 5	45 a 59 minutos
+# 6	60 minutos ou mais 
+# Não aplicável
+class(pnad2008$v1411)
+pnad2008[,actv_commutetime_00to09 := fifelse(v1411 == "1" & v1410 == "2",1,0)] # Menos de 10 minutos
+pnad2008[,actv_commutetime_10to19 := fifelse(v1411 == "2" & v1410 == "2",1,0)] # 10 a 19 minutos
+pnad2008[,actv_commutetime_20to29 := fifelse(v1411 == "3" & v1410 == "2",1,0)] # 20 a 29 minutos
+pnad2008[,actv_commutetime_30to44 := fifelse(v1411 == "4" & v1410 == "2",1,0)] # 30 a 44 minutos
+pnad2008[,actv_commutetime_45to59 := fifelse(v1411 == "5" & v1410 == "2",1,0)] # 45 a 59 minutos
+pnad2008[,actv_commutetime_from60 := fifelse(v1411 == "6" & v1410 == "2",1,0)] # 60 minutos ou mais 
+pnad2008[,actv_commutetime_from30 := fifelse(v1411 %in% c("4","5","6") & v1410 == "2",1,0)] # 30 minutos ou mais 
+
+unique(pnad2008$v1410)
+
+# v9054
+# Tipo de estabelecimento ou onde era exercido o trabalho principal da semana de referência
+# 3	No domicílio em que morava
+pnad2008[v1410 == 0, v1410 := NA]
+pnad2008[v9054 == 3, v1410 := 4]
+pnad2008[v1410 == "2", v1410 := "Sim"]
+pnad2008[v1410 == "4", v1410 := "Não"]
+pnad2008[v1410 == "", v1410 := NA]
+table(pnad2008$v1410,exclude = FALSE)
+
+# V4610: Inversao da fracao
+pnad2008[,v4610 := as.numeric(v4610)]
+pnad2008[, pre_wgt  := v4619 * v4610]
+summary(pnad2008$pre_wgt)
+
+# vehicle ownership variable, make it compatible with PNAD
+# V2032	32a	Tem carro ou motocicleta de uso pessoal	2	Carro
+# 4	Motocicleta
+# 6	Carro e motocicleta
+# 8	Não 
+# Não aplicável
+
+unique(pnad2008$v2032)
+pnad2008[,v2032 := as.numeric(v2032)]
+pnad2008[v2032 == 2, vehicleOwnership := "Automóvel"]
+pnad2008[v2032 == 4, vehicleOwnership := "Motocicleta"]
+pnad2008[v2032 == 6, vehicleOwnership := "Automóvel + Motocicleta"]
+pnad2008[v2032 == 8, vehicleOwnership := "Nenhum"]
+pnad2008[is.na(v2032), vehicleOwnership := NA]
+table(pnad2008$v2032,exclude = FALSE)
+table(pnad2008$vehicleOwnership,exclude = FALSE)
+
+
 
 # Save Pnad2008 files ------------
 

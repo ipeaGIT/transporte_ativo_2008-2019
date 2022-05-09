@@ -1,4 +1,4 @@
-# Create survey design for PNS 2013 data 
+# Create survey design for PNS 2019 data 
 # 1) Load packages  ------
 rm(list=ls())
 gc(reset=TRUE)
@@ -10,7 +10,7 @@ library(microdadosBrasil) # devtools::install_github("lucasmation/microdadosBras
 
 # 2) Read files -----
 
-pns2013 <- readr::read_rds("../../data/transporte_ativo_2008-2019/pns2013.Rds")
+pns2019 <- readr::read_rds("../../data/transporte_ativo_2008-2019/pns2019.Rds")
 
 
 # M001    | Entrevista do adulto selecionado
@@ -30,15 +30,15 @@ pns2013 <- readr::read_rds("../../data/transporte_ativo_2008-2019/pns2013.Rds")
 # There should be no Missings (NA) in Design Variables
 # Count  missing values (NAs)
 
-anyNA(pns2013$V00291)                # TRUE
-sum(is.na(pns2013$V00291))           # 162183
-sum(is.na(pns2013$V0029))            # 162183
-length(which(pns2013$M001 == 1))     # 60202
+anyNA(pns2019$V00291)                # TRUE
+sum(is.na(pns2019$V00291))           # 202880
+sum(is.na(pns2019$V0029))            # 202880
+length(which(pns2019$M001 == 1))     # 90846
 
 # Subset PNS with individuals who answered the detailed questionnaire only
 # This eliminates observations with missing values in the weight variable
 
-pns2013Det <- data.table::copy(pns2013)[!is.na(V0029) & M001 == 1]
+pns2019Det <- data.table::copy(pns2019)[!is.na(V0029) & M001 == 1]
 
 
 
@@ -49,7 +49,7 @@ options( survey.lonely.psu = "adjust" )  # ??survey.lonely.psu
 
 # Cria objeto de desenho da amostra                      
 
-sample_pns <- survey::svydesign(data = pns2013Det,
+sample_pns <- survey::svydesign(data = pns2019Det,
                                 id = ~UPA_PNS,    # PSU
                                 strata = ~V0024,  # Strat
                                 weights = ~V0029, # PesoPessoa: usar peso original
@@ -62,12 +62,13 @@ sample_pns <- survey::svydesign(data = pns2013Det,
 # V00292  | Projecao da populacao para moradores selecionados
 # V00293  | Dominio de pos-estrato 2
 
-post_pop <- unique( pns2013Det[,c("V00293","V00292")] )
+post_pop <- unique( pns2019Det[,c("V00293","V00292")] )
 names(post_pop) <- c("V00293","Freq")
 
 sample_pns_pos <- survey::postStratify(sample_pns, ~V00293, post_pop)
 
 
 # 3) Save survey ------
-saveRDS(object = sample_pns_pos
-        ,file = "../../data/transporte_ativo_2008-2019/sample_pns2013_pos.rds")
+readr::write_rds(x = sample_pns_pos
+        ,file = "../../data/transporte_ativo_2008-2019/sample_pns2019_pos.rds"
+        , compress = "gz")
