@@ -8,60 +8,63 @@ library(data.table)
 library(magrittr)
 library(patchwork)
 
-
-pnad2008 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad2008.rds")
-pns13 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13.rds")
-pns19 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19.rds")
-
-
 # 1) prop_active_commute ~ br + metro ----------
-data.table::setDT(pnad2008$brasil)
-data.table::setDT(pns13$brasil_1)
-data.table::setDT(pns13$brasil_2)
-data.table::setDT(pns19$brasil_1)
-data.table::setDT(pns19$brasil_2)
-data.table::setDT(pnad2008$dummyMetro)
-data.table::setDT(pns13$dummyMetro_1)
-data.table::setDT(pns13$dummyMetro_2)
-data.table::setDT(pns19$dummyMetro_1)
-data.table::setDT(pns19$dummyMetro_2)
+
+pnad2008_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/br.rds")
+   pns13_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/br.rds")
+   pns19_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/br.rds")
+   
+pnad2008_dummyMetro <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/dummyMetro.rds")
+   pns13_dummyMetro <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/dummyMetro.rds")
+   pns19_dummyMetro <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/dummyMetro.rds")
+
+data.table::setDT(pnad2008_br$brasil)
+data.table::setDT(pns13_br$brasil_1)
+data.table::setDT(pns13_br$brasil_2)
+data.table::setDT(pns19_br$brasil_1)
+data.table::setDT(pns19_br$brasil_2)
+data.table::setDT(pnad2008_dummyMetro$dummyMetro)
+data.table::setDT(pns13_dummyMetro$dummyMetro_1)
+data.table::setDT(pns13_dummyMetro$dummyMetro_2)
+data.table::setDT(pns19_dummyMetro$dummyMetro_1)
+data.table::setDT(pns19_dummyMetro$dummyMetro_2)
 
 vec_names <- c("country","mean","ci_l","ci_u")
-names(pnad2008$dummyMetro) <- vec_names
-names(pns13$dummyMetro_1) <- vec_names
-names(pns13$dummyMetro_2) <- vec_names
-names(pns19$dummyMetro_1) <- vec_names
-names(pns19$dummyMetro_2) <- vec_names
-names(pnad2008$brasil) <- vec_names
-names(pns13$brasil_1) <- vec_names
-names(pns13$brasil_2) <- vec_names
-names(pns19$brasil_1) <- vec_names
-names(pns19$brasil_2) <- vec_names
+names(pnad2008_dummyMetro$dummyMetro) <- vec_names
+names(pns13_dummyMetro$dummyMetro_1) <- vec_names
+names(pns13_dummyMetro$dummyMetro_2) <- vec_names
+names(pns19_dummyMetro$dummyMetro_1) <- vec_names
+names(pns19_dummyMetro$dummyMetro_2) <- vec_names
+names(pnad2008_br$brasil) <- vec_names
+names(pns13_br$brasil_1) <- vec_names
+names(pns13_br$brasil_2) <- vec_names
+names(pns19_br$brasil_1) <- vec_names
+names(pns19_br$brasil_2) <- vec_names
 
-pnad2008$dummyMetro[,":="(type = "Sim",ano = 2008)]
-pns13$dummyMetro_1[,":="(type = "Sim, parte do trajeto",ano = 2013)]
-pns13$dummyMetro_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2013)]
-pns19$dummyMetro_1[,":="(type = "Sim, parte do trajeto",ano = 2019)]
-pns19$dummyMetro_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2019)]
-pnad2008$brasil[,":="(type = "Sim",ano = 2008)]
-pns13$brasil_1[,":="(type = "Sim, parte do trajeto",ano = 2013)]
-pns13$brasil_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2013)]
-pns19$brasil_1[,":="(type = "Sim, parte do trajeto",ano = 2019)]
-pns19$brasil_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2019)]
+pnad2008_dummyMetro$dummyMetro[,":="(type = "Sim",ano = 2008)]
+pns13_dummyMetro$dummyMetro_1[,":="(type = "Sim, parte do trajeto",ano = 2013)]
+pns13_dummyMetro$dummyMetro_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2013)]
+pns19_dummyMetro$dummyMetro_1[,":="(type = "Sim, parte do trajeto",ano = 2019)]
+pns19_dummyMetro$dummyMetro_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2019)]
+pnad2008_br$brasil[,":="(type = "Sim",ano = 2008)]
+pns13_br$brasil_1[,":="(type = "Sim, parte do trajeto",ano = 2013)]
+pns13_br$brasil_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2013)]
+pns19_br$brasil_1[,":="(type = "Sim, parte do trajeto",ano = 2019)]
+pns19_br$brasil_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2019)]
 
 single_dt2 <- list(
   # Br files
-  pnad2008$brasil
-  ,pns13$brasil_1
-  ,pns13$brasil_2
-  ,pns19$brasil_1
-  ,pns19$brasil_2
+pnad2008_br$brasil
+  ,pns13_br$brasil_1
+  ,pns13_br$brasil_2
+  ,pns19_br$brasil_1
+  ,pns19_br$brasil_2
   # metro files
-  ,pnad2008$dummyMetro
-  ,pns13$dummyMetro_1
-  ,pns13$dummyMetro_2
-  ,pns19$dummyMetro_1
-  ,pns19$dummyMetro_2
+  ,pnad2008_dummyMetro$dummyMetro
+  ,pns13_dummyMetro$dummyMetro_1
+  ,pns13_dummyMetro$dummyMetro_2
+  ,pns19_dummyMetro$dummyMetro_1
+  ,pns19_dummyMetro$dummyMetro_2
   
 ) %>% data.table::rbindlist()
 
@@ -114,41 +117,51 @@ ggsave(filename = "figures/prop_metro_brasil.png"
        ,dpi = 300)
 
 # 2) prop_active_commute ~ BR + sit-----
-data.table::setDT(pnad2008$sit_brasil)
-data.table::setDT(pns13$sit_brasil_1)
-data.table::setDT(pns13$sit_brasil_2)
-data.table::setDT(pns19$sit_brasil_1)
-data.table::setDT(pns19$sit_brasil_2)
+
+pnad2008_sitbr <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/sit_brasil.rds")
+pns13_sitbr <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/sit_brasil.rds")
+pns19_sitbr <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/sit_brasil.rds")
+
+pnad2008_dummyMetro <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/dummyMetro.rds")
+pns13_dummyMetro <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/dummyMetro.rds")
+pns19_dummyMetro <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/dummyMetro.rds")
+
+
+data.table::setDT(pnad2008_sitbr$sit_brasil)
+data.table::setDT(pns13_sitbr$sit_brasil_1)
+data.table::setDT(pns13_sitbr$sit_brasil_2)
+data.table::setDT(pns19_sitbr$sit_brasil_1)
+data.table::setDT(pns19_sitbr$sit_brasil_2)
 
 vec_names <- c("country","urban","mean","ci_l","ci_u")
-names(pnad2008$sit_brasil) <- vec_names
-names(pns13$sit_brasil_1) <- vec_names
-names(pns13$sit_brasil_2) <- vec_names
-names(pns19$sit_brasil_1) <- vec_names
-names(pns19$sit_brasil_2) <- vec_names
+names(pnad2008_sitbr$sit_brasil) <- vec_names
+names(pns13_sitbr$sit_brasil_1) <- vec_names
+names(pns13_sitbr$sit_brasil_2) <- vec_names
+names(pns19_sitbr$sit_brasil_1) <- vec_names
+names(pns19_sitbr$sit_brasil_2) <- vec_names
 
-pns13$brasil_1[,":="(urban = c("Geral"))]
-pns13$brasil_2[,":="(urban = c("Geral"))]
-pns19$brasil_1[,":="(urban = c("Geral"))]
-pns19$brasil_2[,":="(urban = c("Geral"))]
-pnad2008$brasil[,":="(urban = c("Geral"))]
-pnad2008$sit_brasil[,":="(type = "Sim",ano = 2008,urban = c("Rural","Urbano"))]
-pns13$sit_brasil_1[,":="(type = "Sim, parte do trajeto",ano = 2013)]
-pns13$sit_brasil_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2013)]
-pns19$sit_brasil_1[,":="(type = "Sim, parte do trajeto",ano = 2019)]
-pns19$sit_brasil_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2019)]
+pns13_br$brasil_1[,":="(urban = c("Geral"))]
+pns13_br$brasil_2[,":="(urban = c("Geral"))]
+pns19_br$brasil_1[,":="(urban = c("Geral"))]
+pns19_br$brasil_2[,":="(urban = c("Geral"))]
+pnad2008_br$brasil[,":="(urban = c("Geral"))]
+pnad2008_sitbr$sit_brasil[,":="(type = "Sim",ano = 2008,urban = c("Rural","Urbano"))]
+pns13_sitbr$sit_brasil_1[,":="(type = "Sim, parte do trajeto",ano = 2013)]
+pns13_sitbr$sit_brasil_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2013)]
+pns19_sitbr$sit_brasil_1[,":="(type = "Sim, parte do trajeto",ano = 2019)]
+pns19_sitbr$sit_brasil_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2019)]
 
 single_dt <- list(
-   pnad2008$brasil
-  ,pns13$brasil_1
-  ,pns13$brasil_2
-  ,pns19$brasil_1
-  ,pns19$brasil_2
-  ,pnad2008$sit_brasil
-  ,pns13$sit_brasil_1
-  ,pns13$sit_brasil_2
-  ,pns19$sit_brasil_1
-  ,pns19$sit_brasil_2
+   pnad2008_br$brasil
+  ,pns13_br$brasil_1
+  ,pns13_br$brasil_2
+  ,pns19_br$brasil_1
+  ,pns19_br$brasil_2
+  ,pnad2008_sitbr$sit_brasil
+  ,pns13_sitbr$sit_brasil_1
+  ,pns13_sitbr$sit_brasil_2
+  ,pns19_sitbr$sit_brasil_1
+  ,pns19_sitbr$sit_brasil_2
 ) %>% data.table::rbindlist(use.names = T)
 
 single_dt[,type := factor(x = type
@@ -206,54 +219,63 @@ ggsave(filename = "figures/prop_sit_brasil.png"
        ,dpi = 300)
 
 # 2) prop_active_commute ~ BR + sexo-----
-data.table::setDT(pnad2008$brasil)
-data.table::setDT(pns13$brasil_1)
-data.table::setDT(pns13$brasil_2)
-data.table::setDT(pns19$brasil_1)
-data.table::setDT(pns19$brasil_2)
-data.table::setDT(pnad2008$sexo)
-   data.table::setDT(pns13$sexo_1)
-   data.table::setDT(pns13$sexo_2)
-   data.table::setDT(pns19$sexo_1)
-   data.table::setDT(pns19$sexo_2)
+pnad2008_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/br.rds")
+pns13_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/br.rds")
+pns19_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/br.rds")
+
+pnad2008_sexo <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/sexo.rds")
+pns13_sexo <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/sexo.rds")
+pns19_sexo <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/sexo.rds")
+
+
+data.table::setDT(pnad2008_br$brasil)
+   data.table::setDT(pns13_br$brasil_1)
+   data.table::setDT(pns13_br$brasil_2)
+   data.table::setDT(pns19_br$brasil_1)
+   data.table::setDT(pns19_br$brasil_2)
+  data.table::setDT(pnad2008_sexo$sexo)
+   data.table::setDT(pns13_sexo$sexo_1)
+   data.table::setDT(pns13_sexo$sexo_2)
+   data.table::setDT(pns19_sexo$sexo_1)
+   data.table::setDT(pns19_sexo$sexo_2)
 
 vec_names <- c("sexo","mean","ci_l","ci_u")
-names(pnad2008$brasil) <- vec_names
-names(pns13$brasil_1) <- vec_names
-names(pns13$brasil_2) <- vec_names
-names(pns19$brasil_1) <- vec_names
-names(pns19$brasil_2) <- vec_names
-names(pnad2008$sexo) <- vec_names
-names(pns13$sexo_1) <- vec_names
-names(pns13$sexo_2) <- vec_names
-names(pns19$sexo_1) <- vec_names
-names(pns19$sexo_2) <- vec_names
+names(pnad2008_br$brasil) <- vec_names
+   names(pns13_br$brasil_1) <- vec_names
+   names(pns13_br$brasil_2) <- vec_names
+   names(pns19_br$brasil_1) <- vec_names
+   names(pns19_br$brasil_2) <- vec_names
+names(pnad2008_sexo$sexo) <- vec_names
+   names(pns13_sexo$sexo_1) <- vec_names
+   names(pns13_sexo$sexo_2) <- vec_names
+   names(pns19_sexo$sexo_1) <- vec_names
+   names(pns19_sexo$sexo_2) <- vec_names
 
-pnad2008$brasil[,":="(type = "Sim",ano = 2008)]
- pns13$brasil_1[,":="(type = "Sim, parte do trajeto",ano = 2013)]
- pns13$brasil_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2013)]
- pns19$brasil_1[,":="(type = "Sim, parte do trajeto",ano = 2019)]
- pns19$brasil_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2019)]
-  pnad2008$sexo[,":="(type = "Sim",ano = 2008)]
-   pns13$sexo_1[,":="(type = "Sim, parte do trajeto",ano = 2013)]
-   pns13$sexo_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2013)]
-   pns19$sexo_1[,":="(type = "Sim, parte do trajeto",ano = 2019)]
-   pns19$sexo_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2019)]
+pnad2008_br$brasil[,":="(type = "Sim",ano = 2008)]
+   pns13_br$brasil_1[,":="(type = "Sim, parte do trajeto",ano = 2013)]
+   pns13_br$brasil_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2013)]
+   pns19_br$brasil_1[,":="(type = "Sim, parte do trajeto",ano = 2019)]
+   pns19_br$brasil_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2019)]
+pnad2008_sexo$sexo[,":="(type = "Sim",ano = 2008)]
+   pns13_sexo$sexo_1[,":="(type = "Sim, parte do trajeto",ano = 2013)]
+   pns13_sexo$sexo_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2013)]
+   pns19_sexo$sexo_1[,":="(type = "Sim, parte do trajeto",ano = 2019)]
+   pns19_sexo$sexo_2[,":="(type = "Sim, todo o trajeto"  ,ano = 2019)]
 
 
 single_dt3 <- list(
   # Br files
-  pnad2008$brasil
-  ,pns13$brasil_1
-  ,pns13$brasil_2
-  ,pns19$brasil_1
-  ,pns19$brasil_2
-  # metro files
-  ,pnad2008$sexo
-  ,   pns13$sexo_1
-  ,   pns13$sexo_2
-  ,   pns19$sexo_1
-  ,   pns19$sexo_2
+pnad2008_br$brasil
+  ,pns13_br$brasil_1
+  ,pns13_br$brasil_2
+  ,pns19_br$brasil_1
+  ,pns19_br$brasil_2
+  # sexo files
+  ,pnad2008_sexo$sexo
+  ,   pns13_sexo$sexo_1
+  ,   pns13_sexo$sexo_2
+  ,   pns19_sexo$sexo_1
+  ,   pns19_sexo$sexo_2
   
 ) %>% data.table::rbindlist()
 
