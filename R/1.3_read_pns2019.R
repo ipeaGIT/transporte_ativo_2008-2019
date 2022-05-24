@@ -298,6 +298,9 @@ pns2019[V0001 == 53 & V0031 < 3, metro := "Distrito Federal"]
 
 table(pns2019$metro,exclude = FALSE)
 
+pns2019[,country := "Brasil"]
+pns2019[,dummyMetro := fifelse(is.na(metro),"Non-metro","Metro")]
+gc(reset = T)
 ## 4.2 Mobility -----
 # create indicator variable of ind. above 18yearsold that practice active travel for > 30minutes
 # this is the definition used in table 3.4.1.1 of IBGE report
@@ -414,7 +417,7 @@ summary(pns2019$v4742)
 # Create  var. income deciles of Monthly household income per capita
 pns2019[, decileBR:= as.numeric( cut(v4742
                                      , breaks = Hmisc::wtd.quantile(x = v4742
-                                                                    , weights = V00292
+                                                                    , weights = V00291
                                                                     , probs = seq(0, 1, by=0.1)
                                                                     , na.rm=T),
                                      include.lowest = TRUE, labels = 1:10))]
@@ -426,7 +429,7 @@ table(pns2019$decileBR) #Numero de casos dentro de cada Decil tem que ser igual/
 # Create  var. income quintile of Monthly household income per capitade
 pns2019[, quintileBR:= as.numeric( cut(v4742
                                        , breaks = Hmisc::wtd.quantile(x = v4742
-                                                                      , weights = V00292
+                                                                      , weights = V00291
                                                                       ,probs=seq(0, 1, by=0.2), na.rm=T),
                                        include.lowest= TRUE, labels=1:5))]
 
@@ -435,7 +438,7 @@ table(pns2019$quintileBR) #Numero de casos dentro de cada Decil tem que ser igua
 # function to Create Quintile for different regions
 pns2019[, quintileRegion:= as.numeric( cut(v4742
                                            , breaks = Hmisc::wtd.quantile(x = v4742
-                                                                          , weights = V00292
+                                                                          , weights = V00291
                                                                           ,probs=seq(0, 1, by=0.2), na.rm=T),
                                            include.lowest= TRUE, labels=1:5)), by = region]
 
@@ -443,7 +446,7 @@ pns2019[, quintileRegion:= as.numeric( cut(v4742
 # function to Create Quartile for different regions
 pns2019[, quartileRegion:= as.numeric( cut(v4742
                                            , breaks = Hmisc::wtd.quantile(x = v4742
-                                                                          , weights = V00292
+                                                                          , weights = V00291
                                                                           ,probs=seq(0, 1, by=0.25), na.rm=T),
                                            include.lowest= TRUE, labels=1:4)), by = region]
 
@@ -451,14 +454,14 @@ pns2019[, quartileRegion:= as.numeric( cut(v4742
 # function to Create Quintile for different Metro Areas
 pns2019[, quintileMetro:= as.numeric( cut(v4742,
                                           breaks = Hmisc::wtd.quantile(x = v4742
-                                                                       , weights = V00292
+                                                                       , weights = V00291
                                                                        , probs = seq(0, 1, by=0.2), na.rm=T)
                                           , include.lowest= TRUE, labels=1:5)), by = metro]
 
 # function to Create Quartile for different Metro Areas
 pns2019[, quartileMetro:= as.numeric( cut(v4742
                                           , breaks = Hmisc::wtd.quantile(x = v4742
-                                                                         , weights = V00292
+                                                                         , weights = V00291
                                                                          , probs = seq(0, 1, by=0.25), na.rm=T),
                                           include.lowest= TRUE, labels=1:4)), by = metro]
 
@@ -476,6 +479,6 @@ gc(reset = T)
 
 # Save modified files  ----------------
 
-readr::write_rds(x = pns2019,file =  "../../data/transporte_ativo_2008-2019/pns2019.Rds"
+readr::write_rds(x = pns2019,file =  "../../data/transporte_ativo_2008-2019/pns2019.rds"
                  , compress = "gz")
 

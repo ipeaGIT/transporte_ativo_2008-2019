@@ -27,8 +27,6 @@ dom_raw <- microdadosBrasil::read_PNAD(ft = "domicilios"
                                        ,i = 2008
                                        ,file = file_dom_path)
 
-
-
 # Indicate which columns will be read
 
 # Columns data----
@@ -125,7 +123,7 @@ pnad2008_raw <- data.table::merge.data.table(x = tmp_pes
 rm(list=setdiff(ls(), c("pnad2008_raw")))
 gc(reset = T)
 pnad2008 <- data.table::copy(pnad2008_raw)
-
+colnames(pnad2008) <- janitor::make_clean_names(colnames(pnad2008))
 
 
 
@@ -164,6 +162,46 @@ pnad2008[uf == 52, uf_name :="Goias"]
 pnad2008[uf == 53, uf_name :="Federal District"]
 table(pnad2008$uf_name)
 
+# Create variable Metropolitan area
+pnad2008[v4727 == 1, metro := "Restante das UF"]
+pnad2008[uf == 15 & v4727 == 1, metro := "Belém"]
+pnad2008[uf == 23 & v4727 == 1, metro := "Fortaleza"]
+pnad2008[uf == 26 & v4727 == 1, metro := "Recife"]
+pnad2008[uf == 29 & v4727 == 1, metro := "Salvador"]
+pnad2008[uf == 31 & v4727 == 1, metro := "Belo Horizonte"]
+pnad2008[uf == 33 & v4727 == 1, metro := "Rio de Janeiro"]
+pnad2008[uf == 35 & v4727 == 1, metro := "São Paulo"]
+pnad2008[uf == 41 & v4727 == 1, metro := "Curitiba"]
+pnad2008[uf == 43 & v4727 == 1, metro := "Porto Alegre"]
+pnad2008[uf == 53 & v4727 == 1, metro := "Distrito Federal"]
+table(pnad2008$metro,exclude=FALSE)
+
+pnad2008[,country := "Brasil"]
+pnad2008[,dummyMetro := ifelse(is.na(metro),"Non-metro","Metro")]
+table(pnad2008$dummyMetro,exclude=FALSE)
+gc(reset = T)
+
+# Recode Urban vs Rural variable
+pnad2008[v4105<4, urban := "Urbano"]
+pnad2008[v4105>3 & v4105<9, urban := "Rural"]
+table(pnad2008$urban,exclude = FALSE)
+
+
+# year variable     
+pnad2008[, year := 2008]
+
+# # Count variable     
+# pnad2008[, vcount := 1]
+# table(pnad2008$vcount)
+
+# Create Great Geographical Regions [data.table]
+pnad2008[uf < 20, region :="Norte"]
+pnad2008[uf > 19 & uf < 30, region :="Nordeste"]
+pnad2008[uf > 29 & uf < 40, region :="Sudeste"]
+pnad2008[uf > 39 & uf < 50, region :="Sul"]
+pnad2008[uf > 49 & uf < 60, region :="Centro-Oeste"]
+table(pnad2008$region)
+
 # Recode State variable, make it compatible with PNAD
 pnad2008[uf == 11, uf := "RO"]
 pnad2008[uf == 12, uf := "AC"]
@@ -193,45 +231,6 @@ pnad2008[uf == 51, uf := "MT"]
 pnad2008[uf == 52, uf := "GO"]
 pnad2008[uf == 53, uf := "DF"]
 table(pnad2008$uf)
-
-# Create variable Metropolitan area
-pnad2008[v4727 !=1, metro := "Restante das UF"]
-pnad2008[uf == 15 & v4727 == 1, metro := "Belém"]
-pnad2008[uf == 23 & v4727 == 1, metro := "Fortaleza"]
-pnad2008[uf == 26 & v4727 == 1, metro := "Recife"]
-pnad2008[uf == 29 & v4727 == 1, metro := "Salvador"]
-pnad2008[uf == 31 & v4727 == 1, metro := "Belo Horizonte"]
-pnad2008[uf == 33 & v4727 == 1, metro := "Rio de Janeiro"]
-pnad2008[uf == 35 & v4727 == 1, metro := "São Paulo"]
-pnad2008[uf == 41 & v4727 == 1, metro := "Curitiba"]
-pnad2008[uf == 43 & v4727 == 1, metro := "Porto Alegre"]
-pnad2008[uf == 53 & v4727 == 1, metro := "Distrito Federal"]
-table(pnad2008$metro,exclude=FALSE)
-
-gc(reset = T)
-
-
-# Recode Urban vs Rural variable
-pnad2008[v4105<4, urban := "Urban"]
-pnad2008[v4105>3 & v4105<9, urban := "Rural"]
-table(pnad2008$urban,exclude = FALSE)
-
-
-# year variable     
-pnad2008[, year := 2008]
-colnames(pnad2008) <- tolower(colnames(pnad2008))
-
-# # Count variable     
-# pnad2008[, vcount := 1]
-# table(pnad2008$vcount)
-
-# Create Great Geographical Regions [data.table]
-pnad2008[uf < 20, region :="Norte"]
-pnad2008[uf > 19 & uf < 30, region :="Nordeste"]
-pnad2008[uf > 29 & uf < 40, region :="Sudeste"]
-pnad2008[uf > 39 & uf < 50, region :="Sul"]
-pnad2008[uf > 49 & uf < 60, region :="Centro-Oeste"]
-table(pnad2008$region)
 
 ## Socioeconomico -----
 
@@ -271,7 +270,21 @@ pnad2008[v8005>59 & v8005<65, agegroup := "60-64"]
 pnad2008[v8005>64, agegroup := "65+"]
 table(pnad2008$agegroup,exclude = FALSE)
 
-
+pnad2008[v8005 >= 00 & v8005<05, agegroup1 := "0-4"]
+pnad2008[v8005 >= 04 & v8005<14, agegroup1 := "5-13"]
+pnad2008[v8005 >= 13 & v8005<18, agegroup1 := "14-17"]
+pnad2008[v8005 >= 18 & v8005<20, agegroup1 := "18-19"]
+pnad2008[v8005 >= 20 & v8005<25, agegroup1 := "20-24"]
+pnad2008[v8005 >= 24 & v8005<30, agegroup1 := "25-29"]
+pnad2008[v8005 >= 29 & v8005<35, agegroup1 := "30-34"]
+pnad2008[v8005 >= 34 & v8005<40, agegroup1 := "35-39"]
+pnad2008[v8005 >= 39 & v8005<45, agegroup1 := "40-44"]
+pnad2008[v8005 >= 44 & v8005<50, agegroup1 := "45-49"]
+pnad2008[v8005 >= 49 & v8005<55, agegroup1 := "50-54"]
+pnad2008[v8005 >= 54 & v8005<60, agegroup1 := "55-59"]
+pnad2008[v8005 >= 59 & v8005<65, agegroup1 := "60-64"]
+pnad2008[v8005 >= 64, agegroup1 :="65+"]
+table(pnad2008$agegroup1,exclude = FALSE)  
 # Recode Sex variable, make it compatible with PNAD
 pnad2008[v0302 == 2, sexo := "Masculino"]
 pnad2008[v0302 == 4, sexo := "Feminino"]
@@ -315,6 +328,13 @@ pnad2008[v0404 == "0", raca := "Indígena"]
 pnad2008[v0404 == "9", raca :=  NA]
 table(pnad2008$raca,exclude = FALSE)
 
+pnad2008[v0404 == "2", raca_group := "Branca"]
+pnad2008[v0404 == "4" | v0404 == "8", raca_group := "Preta"]
+pnad2008[v0404 == "0", raca_group := "Indígena"]
+pnad2008[v0404 == "6", raca_group := "Amarela"]
+pnad2008[v0404 == "9", raca_group :=  NA]
+table(pnad2008$raca_group,exclude = FALSE)
+
 # V4721		Rendimento mensal domiciliar para todas as unidades domiciliares 
 # (exclusive o rendimento das pessoas cuja condição na unidade domiciliar era 
 # pensionista, empregado doméstico ou parente do empregado doméstico e das pessoas
@@ -331,12 +351,12 @@ summary(pnad2008$v4742)
 # "V4742" - Rendimento mensal domiciliar per capita 
 # "v4741" - Número de componentes do domícilio (exclusive as pessoas cuja condição na unidade domiciliar era pensionista,
 # empregado doméstico ou parente do empregado doméstico) 
+# "v4729"
 pnad2008[,v4742 := as.numeric(v4742)]
-pnad2008[,v4741 := as.numeric(v4741)]
-pnad2008[,v0105 := as.numeric(v0105)]
+pnad2008[,v4729 := as.numeric(v4729)]
 pnad2008[, decileBR:= as.numeric( cut(v4742
                                       , breaks=Hmisc::wtd.quantile(x = v4742
-                                                                   , weights = v0105
+                                                                   , weights = v4729
                                                                    ,probs=seq(0, 1, by=0.1)
                                                                    , na.rm=T),
                                       include.lowest= TRUE, labels=1:10))]
@@ -344,7 +364,7 @@ pnad2008[, decileBR:= as.numeric( cut(v4742
 pnad2008[,.N,by = decileBR]
 pnad2008[, quintileBR:= as.numeric( cut(v4742
                                         , breaks=Hmisc::wtd.quantile(x = v4742
-                                                                     , weights = v0105
+                                                                     , weights = v4729
                                                                      ,probs=seq(0, 1, by=0.2)
                                                                      , na.rm=T),
                                         include.lowest= TRUE, labels=1:5))]
@@ -353,7 +373,7 @@ pnad2008[,.N,by = quintileBR]
 # different regions
 pnad2008[, quintileRegion:= as.numeric( cut(v4742
                                             , breaks=Hmisc::wtd.quantile(x = v4742
-                                                                         , weights = v0105
+                                                                         , weights = v4729
                                                                          ,probs=seq(0, 1, by=0.2)
                                                                          , na.rm=T),
                                             include.lowest= TRUE, labels=1:5))
@@ -361,7 +381,7 @@ pnad2008[, quintileRegion:= as.numeric( cut(v4742
 pnad2008[,.N,by = quintileRegion]
 pnad2008[, quartileRegion:= as.numeric( cut(v4742
                                             , breaks=Hmisc::wtd.quantile(x = v4742
-                                                                         , weights = v0105
+                                                                         , weights = v4729
                                                                          ,probs=seq(0, 1, by=0.25)
                                                                          , na.rm=T),
                                             include.lowest= TRUE, labels=1:4))
@@ -371,7 +391,7 @@ pnad2008[,.N,by = quartileRegion]
 #  Metro Areas
 pnad2008[, quintileMetro:= as.numeric( cut(v4742
                                            , breaks=Hmisc::wtd.quantile(x = v4742
-                                                                        , weights = v0105
+                                                                        , weights = v4729
                                                                         ,probs=seq(0, 1, by=0.2)
                                                                         , na.rm=T),
                                            include.lowest= TRUE, labels=1:5))
@@ -379,7 +399,7 @@ pnad2008[, quintileMetro:= as.numeric( cut(v4742
 pnad2008[,.N,by = quintileMetro]
 pnad2008[, quartileMetro:= as.numeric( cut(v4742
                                            , breaks=Hmisc::wtd.quantile(x = v4742
-                                                                        , weights = v0105
+                                                                        , weights = v4729
                                                                         ,probs=seq(0, 1, by=0.25)
                                                                         , na.rm=T),
                                            include.lowest= TRUE, labels=1:4))

@@ -126,6 +126,20 @@ pns2013[C008 >= 54 & C008<60, agegroup := "55-59"]
 pns2013[C008 >= 59 & C008<65, agegroup := "60-64"]
 pns2013[C008 >= 64, agegroup :="65+"]
 
+pns2013[C008 >= 00 & C008<05, agegroup1 := "0-4"]
+pns2013[C008 >= 04 & C008<14, agegroup1 := "5-13"]
+pns2013[C008 >= 13 & C008<18, agegroup1 := "14-17"]
+pns2013[C008 >= 18 & C008<20, agegroup1 := "18-19"]
+pns2013[C008 >= 20 & C008<25, agegroup1 := "20-24"]
+pns2013[C008 >= 24 & C008<30, agegroup1 := "25-29"]
+pns2013[C008 >= 29 & C008<35, agegroup1 := "30-34"]
+pns2013[C008 >= 34 & C008<40, agegroup1 := "35-39"]
+pns2013[C008 >= 39 & C008<45, agegroup1 := "40-44"]
+pns2013[C008 >= 44 & C008<50, agegroup1 := "45-49"]
+pns2013[C008 >= 49 & C008<55, agegroup1 := "50-54"]
+pns2013[C008 >= 54 & C008<60, agegroup1 := "55-59"]
+pns2013[C008 >= 59 & C008<65, agegroup1 := "60-64"]
+pns2013[C008 >= 64, agegroup :="65+"]
 table(pns2013$agegroup,exclude = FALSE)  
 
 # Create age groups with bigger age interval
@@ -300,6 +314,11 @@ pns2013[V0001 == 43 & V0031 < 3, metro := "Porto Alegre"]
 pns2013[V0001 == 53 & V0031 < 3, metro := "Distrito Federal"]
 
 table(pns2013$metro,exclude = FALSE)
+
+pns2013[,country := "Brasil"]
+pns2013[,dummyMetro := fifelse(is.na(metro),"Non-metro","Metro")]
+gc(reset = T)
+
 ## 2.3 Mobility -----
 ### create indicator variable of ind. above 18yearsold that practice active travel for > 30minutes
 ## this is the definition used in table 3.4.1.1 of IBGE report
@@ -419,11 +438,21 @@ head(table(pns2013$v4742))
 
 
 # Create income quantiles
+# V0029		Peso do morador selecionado sem calibração	5 dígitos e 8 casas decimais	
+# Peso do morador selecionado com correção de não entrevista sem calibração pela projeção 
+# de população para morador selecionado
+# 
+# V00282		Projeção da população		Projeção da população
+# 
+# V00291		Peso do morador selecionado com calibração	5 dígitos e 8 casas decimais	
+# Peso do morador selecionado com correção de não entrevista com calibração pela 
+# projeção de população para morador selecionado - Usado no cálculo de indicadores 
+# de morador selecionado
 
 # Create  var. income deciles of Monthly household income per capita
 pns2013[, decileBR:= as.numeric( cut(v4742
                                         , breaks = Hmisc::wtd.quantile(x = v4742
-                                                                       , weights = V00292
+                                                                       , weights =  V00291
                                                                        , probs = seq(0, 1, by=0.1)
                                                                        , na.rm=T),
                                         include.lowest = TRUE, labels = 1:10))]
@@ -435,7 +464,7 @@ table(pns2013$decileBR) #Numero de casos dentro de cada Decil tem que ser igual/
 # Create  var. income quintile of Monthly household income per capitade
 pns2013[, quintileBR:= as.numeric( cut(v4742
                                           , breaks = Hmisc::wtd.quantile(x = v4742
-                                                                         , weights = V00292
+                                                                         , weights = V00291
                                                                          ,probs=seq(0, 1, by=0.2), na.rm=T),
                                           include.lowest= TRUE, labels=1:5))]
 
@@ -444,7 +473,7 @@ table(pns2013$quintileBR) #Numero de casos dentro de cada Decil tem que ser igua
 # function to Create Quintile for different regions
 pns2013[, quintileRegion:= as.numeric( cut(v4742
                                               , breaks = Hmisc::wtd.quantile(x = v4742
-                                                                             , weights = V00292
+                                                                             , weights = V00291
                                                                              ,probs=seq(0, 1, by=0.2), na.rm=T),
                                               include.lowest= TRUE, labels=1:5)), by = region]
 
@@ -452,7 +481,7 @@ pns2013[, quintileRegion:= as.numeric( cut(v4742
 # function to Create Quartile for different regions
 pns2013[, quartileRegion:= as.numeric( cut(v4742
                                               , breaks = Hmisc::wtd.quantile(x = v4742
-                                                                             , weights = V00292
+                                                                             , weights = V00291
                                                                              ,probs=seq(0, 1, by=0.25), na.rm=T),
                                               include.lowest= TRUE, labels=1:4)), by = region]
 
@@ -460,14 +489,14 @@ pns2013[, quartileRegion:= as.numeric( cut(v4742
 # function to Create Quintile for different Metro Areas
 pns2013[, quintileMetro:= as.numeric( cut(v4742,
                                              breaks = Hmisc::wtd.quantile(x = v4742
-                                                                          , weights = V00292
+                                                                          , weights = V00291
                                                                           , probs = seq(0, 1, by=0.2), na.rm=T)
                                              , include.lowest= TRUE, labels=1:5)), by = metro]
 
 # function to Create Quartile for different Metro Areas
 pns2013[, quartileMetro:= as.numeric( cut(v4742
                                              , breaks = Hmisc::wtd.quantile(x = v4742
-                                                                            , weights = V00292
+                                                                            , weights = V00291
                                                                             , probs = seq(0, 1, by=0.25), na.rm=T),
                                              include.lowest= TRUE, labels=1:4)), by = metro]
 
@@ -484,7 +513,7 @@ gc(reset = T)
 
 dir.create("data")
 dir.create("data/PNS")
-readr::write_rds(x = pns2013,file =  "../../data/transporte_ativo_2008-2019/pns2013.Rds"
+readr::write_rds(x = pns2013,file =  "../../data/transporte_ativo_2008-2019/pns2013.rds"
                  , compress = "gz")
 
 

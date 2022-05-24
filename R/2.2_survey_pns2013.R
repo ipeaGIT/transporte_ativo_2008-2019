@@ -10,7 +10,7 @@ library(microdadosBrasil) # devtools::install_github("lucasmation/microdadosBras
 
 # 2) Read files -----
 
-pns2013 <- readr::read_rds("../../data/transporte_ativo_2008-2019/pns2013.Rds")
+pns2013 <- readr::read_rds("../../data/transporte_ativo_2008-2019/pns2013.rds")
 
 
 # M001    | Entrevista do adulto selecionado
@@ -35,10 +35,11 @@ sum(is.na(pns2013$V00291))           # 162183
 sum(is.na(pns2013$V0029))            # 162183
 length(which(pns2013$M001 == 1))     # 60202
 
+
 # Subset PNS with individuals who answered the detailed questionnaire only
 # This eliminates observations with missing values in the weight variable
 
-pns2013Det <- data.table::copy(pns2013)[!is.na(V0029) & M001 == 1]
+pns2013Det <- data.table::copy(pns2013)[!is.na(V00291) & M001 == 1]
 
 
 
@@ -69,5 +70,6 @@ sample_pns_pos <- survey::postStratify(sample_pns, ~V00293, post_pop)
 
 
 # 3) Save survey ------
-saveRDS(object = sample_pns_pos
-        ,file = "../../data/transporte_ativo_2008-2019/sample_pns2013_pos.rds")
+readr::write_rds(x = sample_pns_pos
+        ,file = "../../data/transporte_ativo_2008-2019/sample_pns2013_pos.rds"
+        ,compress= "gz")

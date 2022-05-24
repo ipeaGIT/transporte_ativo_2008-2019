@@ -10,7 +10,7 @@ library(microdadosBrasil) # devtools::install_github("lucasmation/microdadosBras
 
 # 2) Read files -----
 
-pns2019 <- readr::read_rds("../../data/transporte_ativo_2008-2019/pns2019.Rds")
+pns2019 <- readr::read_rds("../../data/transporte_ativo_2008-2019/pns2019.rds")
 
 
 # M001    | Entrevista do adulto selecionado
@@ -52,7 +52,7 @@ options( survey.lonely.psu = "adjust" )  # ??survey.lonely.psu
 sample_pns <- survey::svydesign(data = pns2019Det,
                                 id = ~UPA_PNS,    # PSU
                                 strata = ~V0024,  # Strat
-                                weights = ~V0029, # PesoPessoa: usar peso original
+                                weights = ~V00291, # PesoPessoa: usar peso original
                                 nest = TRUE)
 
 ## Agora é preciso pós-estratificar:
