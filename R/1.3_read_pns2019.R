@@ -285,21 +285,21 @@ pns2019[V0031 > 2, v4727 := 3]
 # Create Variable Metropolitan area
 # V0031		Tipo de área	
 pns2019[V0031 == 4             , metro := "Restante das UF"]
-pns2019[V0001 == 15 & V0031 < 3, metro := "Belém"]
-pns2019[V0001 == 23 & V0031 < 3, metro := "Fortaleza"]
-pns2019[V0001 == 26 & V0031 < 3, metro := "Recife"]
-pns2019[V0001 == 29 & V0031 < 3, metro := "Salvador"]
-pns2019[V0001 == 31 & V0031 < 3, metro := "Belo Horizonte"]
-pns2019[V0001 == 33 & V0031 < 3, metro := "Rio de Janeiro"]
-pns2019[V0001 == 35 & V0031 < 3, metro := "São Paulo"]
-pns2019[V0001 == 41 & V0031 < 3, metro := "Curitiba"]
-pns2019[V0001 == 43 & V0031 < 3, metro := "Porto Alegre"]
-pns2019[V0001 == 53 & V0031 < 3, metro := "Distrito Federal"]
+pns2019[V0001 == 15 & V0031 <= 3, metro := "Belém"]
+pns2019[V0001 == 23 & V0031 <= 3, metro := "Fortaleza"]
+pns2019[V0001 == 26 & V0031 <= 3, metro := "Recife"]
+pns2019[V0001 == 29 & V0031 <= 3, metro := "Salvador"]
+pns2019[V0001 == 31 & V0031 <= 3, metro := "Belo Horizonte"]
+pns2019[V0001 == 33 & V0031 <= 3, metro := "Rio de Janeiro"]
+pns2019[V0001 == 35 & V0031 <= 3, metro := "São Paulo"]
+pns2019[V0001 == 41 & V0031 <= 3, metro := "Curitiba"]
+pns2019[V0001 == 43 & V0031 <= 3, metro := "Porto Alegre"]
+pns2019[V0001 == 53 & V0031 <= 3, metro := "Distrito Federal"]
 
 table(pns2019$metro,exclude = FALSE)
 
 pns2019[,country := "Brasil"]
-pns2019[,dummyMetro := fifelse(is.na(metro),"Non-metro","Metro")]
+pns2019[,dummyMetro := fifelse(metro == "Restante das UF","Non-metro","Metro")]
 gc(reset = T)
 ## 4.2 Mobility -----
 # create indicator variable of ind. above 18yearsold that practice active travel for > 30minutes

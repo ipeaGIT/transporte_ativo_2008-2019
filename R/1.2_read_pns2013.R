@@ -302,21 +302,21 @@ table(pns2013$v4727,exclude = FALSE)
 # Create Variable Metropolitan area
 # V0031		Tipo de área	
 pns2013[V0031 == 4, metro := "Restante das UF"]
-pns2013[V0001 == 15 & V0031 < 3, metro := "Belém"]
-pns2013[V0001 == 23 & V0031 < 3, metro := "Fortaleza"]
-pns2013[V0001 == 26 & V0031 < 3, metro := "Recife"]
-pns2013[V0001 == 29 & V0031 < 3, metro := "Salvador"]
-pns2013[V0001 == 31 & V0031 < 3, metro := "Belo Horizonte"]
-pns2013[V0001 == 33 & V0031 < 3, metro := "Rio de Janeiro"]
-pns2013[V0001 == 35 & V0031 < 3, metro := "São Paulo"]
-pns2013[V0001 == 41 & V0031 < 3, metro := "Curitiba"]
-pns2013[V0001 == 43 & V0031 < 3, metro := "Porto Alegre"]
-pns2013[V0001 == 53 & V0031 < 3, metro := "Distrito Federal"]
+pns2013[V0001 == 15 & V0031 <= 3, metro := "Belém"]
+pns2013[V0001 == 23 & V0031 <= 3, metro := "Fortaleza"]
+pns2013[V0001 == 26 & V0031 <= 3, metro := "Recife"]
+pns2013[V0001 == 29 & V0031 <= 3, metro := "Salvador"]
+pns2013[V0001 == 31 & V0031 <= 3, metro := "Belo Horizonte"]
+pns2013[V0001 == 33 & V0031 <= 3, metro := "Rio de Janeiro"]
+pns2013[V0001 == 35 & V0031 <= 3, metro := "São Paulo"]
+pns2013[V0001 == 41 & V0031 <= 3, metro := "Curitiba"]
+pns2013[V0001 == 43 & V0031 <= 3, metro := "Porto Alegre"]
+pns2013[V0001 == 53 & V0031 <= 3, metro := "Distrito Federal"]
 
 table(pns2013$metro,exclude = FALSE)
 
 pns2013[,country := "Brasil"]
-pns2013[,dummyMetro := fifelse(is.na(metro),"Non-metro","Metro")]
+pns2013[,dummyMetro := fifelse(metro == "Restante das UF","Non-metro","Metro")]
 gc(reset = T)
 
 ## 2.3 Mobility -----
