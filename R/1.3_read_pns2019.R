@@ -23,7 +23,7 @@ sas_path_2019 <- "../../data-raw/PNS/2019/input_PNS_2019.sas"
 sas_file <- parse.sasci_mod(sas_ri = sas_path_2019,beginline = 1)
 
 # Read the .txt file
-txt_path_2019 <- "../../data-raw/PNS/2019/PNS_2019.txt"
+txt_path_2019 <- "../../data-raw/PNS/2019/pns_2019_20220525/PNS_2019.txt"
 pns2019 <-   readr::read_fwf(file = txt_path_2019,
                              col_positions = readr::fwf_widths(widths = dput(sas_file$width),
                                                                col_names = (dput(sas_file$varname))),

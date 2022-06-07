@@ -25,7 +25,7 @@ sas_file <- parse.sasci_mod(sas_ri = sas_path_2013,beginline = 1)
 
 # Read the .txt file
 
-txt_path_2013 <- "../../data-raw/PNS/2013/PNS_2013.txt"
+txt_path_2013 <- "../../data-raw/PNS/2013/pns_2013_20200825/PNS_2013.txt"
 pns2013 <-   readr::read_fwf(file = txt_path_2013,
                                 col_positions = readr::fwf_widths(widths = dput(sas_file$width),
                                                                   col_names = (dput(sas_file$varname))),
@@ -61,14 +61,14 @@ myvaribles <- c(
   , "V00293"    # Dominio de pos-estrato 2
   , "C004"      # Condi??o no domic?lio
   , "V0006_PNS" # N?mero de ordem do domic?lio na PNS
-  , "E01602"   # Income
+  , "E01602"    # Income
   , "E01604"    # Income
   , "E01802"    # Income
   , "E01804"    # Income
   , "F00102"    # Income
   , "F00702"    # Income
   , "F00802"    # Income
-  , "VDF00102"    # Income
+  , "VDF00102"  # Income
 )
 
 

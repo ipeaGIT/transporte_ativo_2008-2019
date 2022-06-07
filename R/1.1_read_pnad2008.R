@@ -11,12 +11,12 @@ library(SAScii)
 # Read data ----
 
 # microdados
-file_pes_path <- "../../data-raw/PNAD/2008/dados/PES2008.TXT"
-file_dom_path <- "../../data-raw/PNAD/2008/dados/DOM2008.txt"
+file_pes_path <- "../../data-raw/PNAD/2008/pnad_2008_20160817/2008/Dados/PES2008.TXT"
+file_dom_path <- "../../data-raw/PNAD/2008/pnad_2008_20160817/2008/Dados/DOM2008.txt"
 
 # dicionario
-dic_pes_path <- "../../data-raw/PNAD/2008/input/input PES2008.txt"
-dic_dom_path <- "../../data-raw/PNAD/2008/input/input DOM2008.txt"
+# dic_pes_path <- "../../data-raw/PNAD/2008/input/input PES2008.txt"
+# dic_dom_path <- "../../data-raw/PNAD/2008/input/input DOM2008.txt"
 
 
 pes_raw <- microdadosBrasil::read_PNAD(ft = "pessoas"
@@ -43,6 +43,7 @@ mycolsPES <- c( "V0101", # Ano
                 "V4803", # Years of schooling
                 "V4745", # Nivel de instrucao mais elevado alcancado (todas as pessoas)
                 "V4741", # Numeo de componentes familia - 01 a 30 pessoas
+                "V4746", # V4746		Situação de ocupação na semana de referência das pessoas de 5 anos ou mais de idade
                 "V4727", # Codigo de area censitaria
                 "V9005", # Number of jobs
                 "V4805", # Condicao de ocupacao na semana de referencia para
@@ -113,6 +114,11 @@ table(tmp_pes$V0102)
 #1:   2008 11000015   001 11
 # tmp_dom[V0101 == "2008" & V0102 == "11000015" & V0103 == "001" & UF == "11"] %>% str()
 # tmp_pes[V0101 == "2008" & V0102 == "11000015" & V0103 == "001" & UF == "11"] %>% str()
+
+# V0101 - year
+# V0102 - numero de controle
+# V0103 - numero de serie
+# UF - state
 
 pnad2008_raw <- data.table::merge.data.table(x = tmp_pes
                                          ,y = tmp_dom
@@ -369,7 +375,14 @@ pnad2008[, quintileBR:= as.numeric( cut(v4742
                                                                      , na.rm=T),
                                         include.lowest= TRUE, labels=1:5))]
 pnad2008[,.N,by = quintileBR]
-
+pnad2008[, quintileDummyMetro:= as.numeric( cut(v4742
+                                        , breaks=Hmisc::wtd.quantile(x = v4742
+                                                                     , weights = v4729
+                                                                     ,probs=seq(0, 1, by=0.2)
+                                                                     , na.rm=T),
+                                        include.lowest= TRUE, labels=1:5))
+         ,by = dummyMetro]
+pnad2008[,.N,by = quintileDummyMetro]
 # different regions
 pnad2008[, quintileRegion:= as.numeric( cut(v4742
                                             , breaks=Hmisc::wtd.quantile(x = v4742
