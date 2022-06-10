@@ -42,8 +42,8 @@ source("R:/Dropbox/Desloc Ativo2/R scripts/0 LoadPackages.R")
     # indiViduals data
     mycolsPES <- c( "V0101", # year
                     "UF",    # State
-                    "V0102", # Número de controle
-                    "V0103", # Número de serie
+                    "V0102", # N?mero de controle
+                    "V0103", # N?mero de serie
                     "V0403", # Family number
                     "V4729", # Person Weight
                     "V4732", # Family Weight
@@ -72,8 +72,8 @@ source("R:/Dropbox/Desloc Ativo2/R scripts/0 LoadPackages.R")
     # household data
     mycolsDOM <- c("V0101", # year
                    "UF",    # State
-                   "V0102", # Número de controle
-                   "V0103", # Número de serie
+                   "V0102", # Numero de controle
+                   "V0103", # Numero de serie
                    "V0403", # Family number
                    "V4729", # Person Weight
                    "V4732", # Family Weight
@@ -82,10 +82,10 @@ source("R:/Dropbox/Desloc Ativo2/R scripts/0 LoadPackages.R")
                    "V4602", # Strata
                    "V4617", # STRAT
                    "V4609", # Population Projection
-                   "UPA",   # Delimitação do município
-                   "V4618", # PSU - Unidade primária de amostragem
+                   "UPA",   # Delimitacao do munic?pio
+                   "V4618", # PSU - Unidade prim?ria de amostragem
                    "V4619", # Fator de subamostragem
-                   "V4610", # InVerso da fração
+                   "V4610", # InVerso da fra??o
                    "V4611", # Household weight
                    "V0233", # Household registered in 'saude da familia' program
                    "V0234") # time since registration
@@ -546,7 +546,7 @@ saveRDS(pnad2008dom, file="pnad2008dom.Rds")
     
     
     
-    # Gráfico 3 - % per region
+    # Gr?fico 3 - % per region
       # South: 50.35 , North: 51.0 , Midwest: 49.1
       
       svyby(~factor(v0233==1),  ~region, design= sample.pnad08dom,  vartype="ci",  level = 0.95,svyciprop)

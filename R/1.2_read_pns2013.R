@@ -26,10 +26,13 @@ sas_file <- parse.sasci_mod(sas_ri = sas_path_2013,beginline = 1)
 # Read the .txt file
 
 txt_path_2013 <- "../../data-raw/PNS/2013/pns_2013_20200825/PNS_2013.txt"
-pns2013 <-   readr::read_fwf(file = txt_path_2013,
-                                col_positions = readr::fwf_widths(widths = dput(sas_file$width),
-                                                                  col_names = (dput(sas_file$varname))),
-                                progress = interactive())
+pns2013 <-   readr::read_fwf(
+  file = txt_path_2013
+  , col_positions = readr::fwf_widths(
+    widths = dput(sas_file$width)
+    , col_names = (dput(sas_file$varname)))
+  , progress = interactive()
+)
 
 data.table::setDT(pns2013)
 
@@ -97,7 +100,7 @@ table(pns2013$vehicleOwnership,exclude = FALSE)
 pns2013[, dummyVehicle := data.table::fifelse(vehicleOwnership == "Nenhum", 0, 1)]
 
 pns2013[,dummyVehicle := factor(dummyVehicle, levels = c(1,0),
-                                   labels = c("Sim","Não"))]
+                                labels = c("Sim","Não"))]
 
 table(pns2013$dummyVehicle,exclude = FALSE)
 # V0029	 | Peso do morador selecionado sem calibracao
@@ -202,6 +205,12 @@ pns2013[C009 == "5", raca := "Indígena"]
 pns2013[C009 == "9", raca :=  NA]
 table(pns2013$raca,exclude = FALSE)
 table(pns2013$C009,exclude = FALSE)
+
+# Raca group
+pns2013[, raca_group :=  raca]
+pns2013[raca == "Preta", raca_group := "Negra"]
+pns2013[raca == "Parda", raca_group := "Negra"]
+
 
 # Recode Sex Variable, make it compatible with PNAD
 # C006	C6	Sexo
@@ -364,10 +373,15 @@ pns2013[,physicallyactive30 := fifelse(actv_commutetime >= 30,1,0)] # 30 minutos
 
 # Recode Acctive Travel Variable P040 into string
 pns2013[, P040 := as.character(P040)]
-pns2013[P040 == 1, P040 := "Sim, todo o trajeto"]
-pns2013[P040 == 2, P040 := "Sim, parte do trajeto"]
-pns2013[P040 == 3, P040 :=  "Não"]
+pns2013[(P040 == "1" | P040 == "2") & is.na(actv_commutetime), P040 :=  NA]
+pns2013[(P040 == "1" | P040 == "2") & actv_commutetime == 0, P040 :=  NA]
+
+pns2013[P040 == "1", P040 := "Sim, todo o trajeto"]
+pns2013[P040 == "2", P040 := "Sim, parte do trajeto"]
+pns2013[P040 == "3", P040 :=  "Não"]
 table(pns2013$P040,exclude = FALSE)
+
+
 # Recode Active Travel Variable, make it compatible with PNAD
 # P040	-	Para ir ou voltar do trabalho, o(a) Sr(a) faz algum trajeto a pé ou de bicicleta
 # 1	Sim, todo o trajeto
@@ -395,7 +409,7 @@ table(pns2013$P040,exclude = FALSE)
 colnames_income <-  c('E01602', 'E01604', 'E01802', 'E01804',
                       'F00102', 'F00702', 'F00802', 'VDF00102')
 pns2013[,(colnames_income) := lapply(.SD,as.numeric)
-           , .SDcols = colnames_income]
+        , .SDcols = colnames_income]
 
 # to numeric
 # VDC001		Número de componentes do domicílio 
@@ -422,9 +436,9 @@ summary(pns2013$VDF00102)
 # C004	C4	Condição no domicílio:
 
 pns2013[ C004 <17 , v4742 := sum( E01602, E01604, E01802,
-                                     E01804, F00102, F00702, 
-                                     F00802, VDF00102, na.rm = T) / VDC001,
-            by= .(V0001, V0024, UPA_PNS, V0006_PNS)] # sum all income sources
+                                  E01804, F00102, F00702, 
+                                  F00802, VDF00102, na.rm = T) / VDC001,
+         by= .(V0001, V0024, UPA_PNS, V0006_PNS)] # sum all income sources
 
 
 summary(pns2013$v4742)
@@ -451,11 +465,11 @@ head(table(pns2013$v4742))
 
 # Create  var. income deciles of Monthly household income per capita
 pns2013[, decileBR:= as.numeric( cut(v4742
-                                        , breaks = Hmisc::wtd.quantile(x = v4742
-                                                                       , weights =  V00291
-                                                                       , probs = seq(0, 1, by=0.1)
-                                                                       , na.rm=T),
-                                        include.lowest = TRUE, labels = 1:10))]
+                                     , breaks = Hmisc::wtd.quantile(x = v4742
+                                                                    , weights =  V00291
+                                                                    , probs = seq(0, 1, by=0.1)
+                                                                    , na.rm=T),
+                                     include.lowest = TRUE, labels = 1:10))]
 
 # Checking Table
 table(pns2013$decileBR) #Numero de casos dentro de cada Decil tem que ser igual/proximo
@@ -463,42 +477,48 @@ table(pns2013$decileBR) #Numero de casos dentro de cada Decil tem que ser igual/
 
 # Create  var. income quintile of Monthly household income per capitade
 pns2013[, quintileBR:= as.numeric( cut(v4742
-                                          , breaks = Hmisc::wtd.quantile(x = v4742
-                                                                         , weights = V00291
-                                                                         ,probs=seq(0, 1, by=0.2), na.rm=T),
-                                          include.lowest= TRUE, labels=1:5))]
+                                       , breaks = Hmisc::wtd.quantile(x = v4742
+                                                                      , weights = V00291
+                                                                      ,probs=seq(0, 1, by=0.2), na.rm=T),
+                                       include.lowest= TRUE, labels=1:5))]
 
 table(pns2013$quintileBR) #Numero de casos dentro de cada Decil tem que ser igual/proximo
 
 # function to Create Quintile for different regions
 pns2013[, quintileRegion:= as.numeric( cut(v4742
-                                              , breaks = Hmisc::wtd.quantile(x = v4742
-                                                                             , weights = V00291
-                                                                             ,probs=seq(0, 1, by=0.2), na.rm=T),
-                                              include.lowest= TRUE, labels=1:5)), by = region]
+                                           , breaks = Hmisc::wtd.quantile(x = v4742
+                                                                          , weights = V00291
+                                                                          ,probs=seq(0, 1, by=0.2), na.rm=T),
+                                           include.lowest= TRUE, labels=1:5)), by = region]
 
+# function to Create Quintile for dummyMetro
+pns2013[, quintileDummyMetro:= as.numeric( cut(v4742
+                                               , breaks = Hmisc::wtd.quantile(x = v4742
+                                                                              , weights = V00291
+                                                                              ,probs=seq(0, 1, by=0.2), na.rm=T),
+                                               include.lowest= TRUE, labels=1:5)), by = dummyMetro]
 
 # function to Create Quartile for different regions
 pns2013[, quartileRegion:= as.numeric( cut(v4742
-                                              , breaks = Hmisc::wtd.quantile(x = v4742
-                                                                             , weights = V00291
-                                                                             ,probs=seq(0, 1, by=0.25), na.rm=T),
-                                              include.lowest= TRUE, labels=1:4)), by = region]
+                                           , breaks = Hmisc::wtd.quantile(x = v4742
+                                                                          , weights = V00291
+                                                                          ,probs=seq(0, 1, by=0.25), na.rm=T),
+                                           include.lowest= TRUE, labels=1:4)), by = region]
 
 
 # function to Create Quintile for different Metro Areas
 pns2013[, quintileMetro:= as.numeric( cut(v4742,
-                                             breaks = Hmisc::wtd.quantile(x = v4742
-                                                                          , weights = V00291
-                                                                          , probs = seq(0, 1, by=0.2), na.rm=T)
-                                             , include.lowest= TRUE, labels=1:5)), by = metro]
+                                          breaks = Hmisc::wtd.quantile(x = v4742
+                                                                       , weights = V00291
+                                                                       , probs = seq(0, 1, by=0.2), na.rm=T)
+                                          , include.lowest= TRUE, labels=1:5)), by = metro]
 
 # function to Create Quartile for different Metro Areas
 pns2013[, quartileMetro:= as.numeric( cut(v4742
-                                             , breaks = Hmisc::wtd.quantile(x = v4742
-                                                                            , weights = V00291
-                                                                            , probs = seq(0, 1, by=0.25), na.rm=T),
-                                             include.lowest= TRUE, labels=1:4)), by = metro]
+                                          , breaks = Hmisc::wtd.quantile(x = v4742
+                                                                         , weights = V00291
+                                                                         , probs = seq(0, 1, by=0.25), na.rm=T),
+                                          include.lowest= TRUE, labels=1:4)), by = metro]
 
 
 

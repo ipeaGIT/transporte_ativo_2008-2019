@@ -24,10 +24,15 @@ sas_file <- parse.sasci_mod(sas_ri = sas_path_2019,beginline = 1)
 
 # Read the .txt file
 txt_path_2019 <- "../../data-raw/PNS/2019/pns_2019_20220525/PNS_2019.txt"
-pns2019 <-   readr::read_fwf(file = txt_path_2019,
-                             col_positions = readr::fwf_widths(widths = dput(sas_file$width),
-                                                               col_names = (dput(sas_file$varname))),
-                             progress = interactive())
+
+pns2019 <-   readr::read_fwf(
+  file = txt_path_2019
+  ,col_positions = readr::fwf_widths(
+    widths = dput(sas_file$width),
+    col_names = (dput(sas_file$varname))
+  ),
+  progress = interactive()
+)
 
 data.table::setDT(pns2019)
 # clean memory
@@ -188,6 +193,10 @@ pns2019[C009 == "9", raca :=  NA]
 table(pns2019$raca,exclude = FALSE)
 table(pns2019$C009,exclude = FALSE)
 
+# Raca group
+pns2019[, raca_group :=  raca]
+pns2019[raca == "Preta", raca_group := "Negra"]
+pns2019[raca == "Parda", raca_group := "Negra"]
 
 ## 4.1 Regions ----
 
@@ -319,8 +328,6 @@ summary(pns2019$P04301)
 summary(pns2019$P04302)
 pns2019[,P04101 := as.numeric(P04101)]
 pns2019[,P04102 := as.numeric(P04102)]
-pns2019[,P04301 := as.numeric(P04301)]
-pns2019[,P04302 := as.numeric(P04302)]
 pns2019[, actv_commutetime := P04101 * 60 + P04102] # Active commute time
 
 summary(pns2019$actv_commutetime)
@@ -334,22 +341,13 @@ pns2019[,actv_commutetime_45to59 := fifelse(actv_commutetime >= 45 & actv_commut
 pns2019[,actv_commutetime_from60 := fifelse(actv_commutetime >= 60,1,0)] # 60 minutos ou mais 
 pns2019[,actv_commutetime_from30 := fifelse(actv_commutetime >= 30,1,0)] # 30 minutos ou mais 
 
-table(pns2019$P040,exclude = FALSE)
-table(pns2019$actv_commutetime_00to09,exclude = FALSE)
-table(pns2019$actv_commutetime_10to19,exclude = FALSE)
-table(pns2019$actv_commutetime_20to29,exclude = FALSE)
-table(pns2019$actv_commutetime_30to44,exclude = FALSE)
-table(pns2019$actv_commutetime_45to59,exclude = FALSE)
-table(pns2019$actv_commutetime_from60,exclude = FALSE)
-table(pns2019$actv_commutetime_from30,exclude = FALSE)
-
-
 # Recode Acctive Travel Variable P040 into string
 pns2019[, P040 := as.character(P040)]
-pns2019[P040 == 1, P040 := "Sim, todo o trajeto"]
-pns2019[P040 == 2, P040 := "Sim, parte do trajeto"]
-pns2019[P040 == 3, P040 :=  "Não"]
-table(pns2019$P040,exclude = FALSE)
+pns2019[(P040 == "1" | P040 == "2") & is.na(actv_commutetime), P040 :=  NA]
+pns2019[(P040 == "1" | P040 == "2") & actv_commutetime == 0, P040 :=  NA]
+pns2019[P040 == "1", P040 := "Sim, todo o trajeto"]
+pns2019[P040 == "2", P040 := "Sim, parte do trajeto"]
+pns2019[P040 == "3", P040 :=  "Não"]
 
 # Recode Active Travel Variable, make it compatible with PNAD
 # P040	-	Para ir ou voltar do trabalho, o(a) Sr(a) faz algum trajeto a pé ou de bicicleta
@@ -450,6 +448,13 @@ pns2019[, quartileRegion:= as.numeric( cut(v4742
                                                                           ,probs=seq(0, 1, by=0.25), na.rm=T),
                                            include.lowest= TRUE, labels=1:4)), by = region]
 
+
+# function to Create Quintile for different Metro Areas
+pns2019[, quintileDummyMetro:= as.numeric( cut(v4742,
+                                               breaks = Hmisc::wtd.quantile(x = v4742
+                                                                            , weights = V00291
+                                                                            , probs = seq(0, 1, by=0.2), na.rm=T)
+                                               , include.lowest= TRUE, labels=1:5)), by = dummyMetro]
 
 # function to Create Quintile for different Metro Areas
 pns2019[, quintileMetro:= as.numeric( cut(v4742,

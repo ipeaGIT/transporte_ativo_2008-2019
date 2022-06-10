@@ -334,11 +334,8 @@ pnad2008[v0404 == "0", raca := "Indígena"]
 pnad2008[v0404 == "9", raca :=  NA]
 table(pnad2008$raca,exclude = FALSE)
 
-pnad2008[v0404 == "2", raca_group := "Branca"]
-pnad2008[v0404 == "4" | v0404 == "8", raca_group := "Preta"]
-pnad2008[v0404 == "0", raca_group := "Indígena"]
-pnad2008[v0404 == "6", raca_group := "Amarela"]
-pnad2008[v0404 == "9", raca_group :=  NA]
+pnad2008[, raca_group := raca]
+pnad2008[v0404 == "4" | v0404 == "8", raca_group := "Negra"]
 table(pnad2008$raca_group,exclude = FALSE)
 
 # V4721		Rendimento mensal domiciliar para todas as unidades domiciliares 
@@ -466,6 +463,10 @@ pnad2008[,actv_commutetime_from60 := fifelse(v1411 == "6" & v1410 == "2",1,0)] #
 pnad2008[,actv_commutetime_from30 := fifelse(v1411 %in% c("4","5","6") & v1410 == "2",1,0)] # 30 minutos ou mais 
 
 unique(pnad2008$v1410)
+table(pnad2008$v1411)
+table(pnad2008[!is.na(v1410),]$v1411)
+table(pnad2008[v1410 == "Sim",]$v1411)
+table(pnad2008[v1410 == "Não",]$v1411)
 
 # v9054
 # Tipo de estabelecimento ou onde era exercido o trabalho principal da semana de referência
