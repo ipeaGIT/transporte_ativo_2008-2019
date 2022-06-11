@@ -172,12 +172,14 @@ pns2019[VDD004A == 7, edugroup_large := "Superior completo"]
 table(pns2019$edugroup_large,exclude = FALSE)
 
 # Educational groups
-pns2019[VDD004A < 3               , edugroup := "Sem instrução + Fundamental incompleto"]
-pns2019[VDD004A == 3 | VDD004A == 4, edugroup := "Fundamental completo"]
-pns2019[VDD004A == 5 | VDD004A == 6, edugroup := "Médio completo"]
-pns2019[VDD004A == 7              , edugroup := "Superior completo"]
+pns2019[VDD004A < 3        , edugroup := "Sem instrução + Fundamental incompleto"]
+pns2019[VDD004A %in% c(3,4), edugroup := "Fundamental completo"]
+pns2019[VDD004A %in% c(5,6), edugroup := "Médio completo"]
+pns2019[VDD004A == 7       , edugroup := "Superior completo"]
 
 table(pns2019$edugroup,exclude = FALSE)
+
+pns2019[,.N,by =.(edugroup_large,sexo)]
 
 # Recode Race variable into string
 # C009	C9	Cor ou raça

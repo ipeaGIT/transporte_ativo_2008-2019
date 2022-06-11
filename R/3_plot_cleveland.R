@@ -528,9 +528,7 @@ ggplot(data = single_dt2
     , color = "Escolaridade"
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
   )+
-  guides(color = guide_legend(
-    override.aes = list(linetype = 0))
-    , fill = "none")+
+c
   theme_minimal()
 
 ggsave(filename = "figures/prop_escolaridade_sexo.jpg"
@@ -550,30 +548,30 @@ pns19 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/tim
 
 # set DT
 pnad2008 <- data.table::rbindlist(
-  list( setDT(pnad2008$time_00to09)[,1:2][,time := "00to09"]
-        ,setDT(pnad2008$time_10to19)[,1:2][,time := "10to19"]
-        ,setDT(pnad2008$time_20to29)[,1:2][,time := "20to29"]
-        ,setDT(pnad2008$time_30to44)[,1:2][,time := "30to44"]
-        ,setDT(pnad2008$time_45to59)[,1:2][,time := "45to59"])
+  list(  setDT(pnad2008$time_00to09)[,time := "00to09"]
+        ,setDT(pnad2008$time_10to19)[,time := "10to19"]
+        ,setDT(pnad2008$time_20to29)[,time := "20to29"]
+        ,setDT(pnad2008$time_30to44)[,time := "30to44"]
+        ,setDT(pnad2008$time_45to59)[,time := "45to59"])
 )
 data.table::setnames(pnad2008,old = "actv_commutetime_00to09",new = "mean") 
 
 pns13    <- data.table::rbindlist(
-  list( setDT(pns13$time_00to09)[,1:2][,time := "00to09"]
-        ,setDT(pns13$time_10to19)[,1:2][,time := "10to19"]
-        ,setDT(pns13$time_20to29)[,1:2][,time := "20to29"]
-        ,setDT(pns13$time_30to44)[,1:2][,time := "30to44"]
-        ,setDT(pns13$time_45to59)[,1:2][,time := "45to59"]
+  list(  setDT(pns13$time_00to09)[,time := "00to09"]
+        ,setDT(pns13$time_10to19)[,time := "10to19"]
+        ,setDT(pns13$time_20to29)[,time := "20to29"]
+        ,setDT(pns13$time_30to44)[,time := "30to44"]
+        ,setDT(pns13$time_45to59)[,time := "45to59"]
   )
 )
 data.table::setnames(pns13,old = "actv_commutetime_00to09",new = "mean") 
 
 pns19    <- data.table::rbindlist( 
-  list( setDT(pns19$time_00to09)[,1:2][,time := "00to09"]
-       ,setDT(pns19$time_10to19)[,1:2][,time := "10to19"]
-       ,setDT(pns19$time_20to29)[,1:2][,time := "20to29"]
-       ,setDT(pns19$time_30to44)[,1:2][,time := "30to44"]
-       ,setDT(pns19$time_45to59)[,1:2][,time := "45to59"]
+  list( setDT(pns19$time_00to09)[,time := "00to09"]
+       ,setDT(pns19$time_10to19)[,time := "10to19"]
+       ,setDT(pns19$time_20to29)[,time := "20to29"]
+       ,setDT(pns19$time_30to44)[,time := "30to44"]
+       ,setDT(pns19$time_45to59)[,time := "45to59"]
   )
 )
 data.table::setnames(pns19,old = "actv_commutetime_00to09",new = "mean") 
@@ -623,7 +621,9 @@ single_dt2[ano==2019]
 single_dt2[ano==2008]
 
 # plot
-ggplot(single_dt2) + 
+ggplot(single_dt2
+       ,aes(x= time_f 
+            ,y = mean)) + 
   geom_path(aes(x= time_f 
                 ,y = mean
                 , color = sexo_f
@@ -634,13 +634,23 @@ ggplot(single_dt2) +
                  , color = sexo_f
                  , group = sexo_f)
              ,size = 1.75) +
-  #geom_bar(aes(x= time_f 
-  #           ,y = mean
-  #           , fill = sexo_f
-  #           , group = sexo_f)
-  #         , stat="identity"
-  #        , position = position_dodge(width = .35)
-  #        , width = .35) +
+  geom_pointrange(
+    aes(
+      ymin = ci_l
+      , ymax = ci_u
+      , color = sexo_f
+    )
+    ,position = position_dodge(width = 0)
+    ,shape = 19) +
+  geom_ribbon(
+    aes(
+      ymin = ci_l
+      , ymax = ci_u
+      , group = sexo_f
+      , fill = sexo_f
+    )
+    ,alpha = 0.10
+    ,position = position_dodge(width = 0)) +
   scale_y_continuous(labels = scales::percent)+
   scale_color_manual(values = c(
     '#620C1A'
@@ -662,10 +672,76 @@ ggplot(single_dt2) +
     , color = "Sexo"
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
   )+
+  guides(color = guide_legend(
+    override.aes = list(linetype = 0))
+    , fill = "none")+
   theme_minimal()
 
 
 ggsave(filename = "figures/prop_time_sexo.jpg"
+       ,width = 15
+       ,height = 12
+       ,scale = 1.2
+       ,units = "cm"
+       ,dpi = 300)
+
+ggplot(single_dt2
+       ,aes(x= time_f 
+            ,y = mean)) + 
+  geom_path(aes(x= time_f 
+                ,y = mean
+                , color = sexo_f
+                , group = sexo_f)
+            ,size = .85) +
+  geom_point(aes(x= time_f 
+                 ,y = mean
+                 , color = sexo_f
+                 , group = sexo_f)
+             ,size = 2.75) +
+  geom_pointrange(
+    aes(
+      ymin = ci_l
+      , ymax = ci_u
+      , color = sexo_f
+    )
+    ,position = position_dodge(width = 0)
+    ,shape = 19) +
+  geom_ribbon(
+    aes(
+      ymin = ci_l
+      , ymax = ci_u
+      , group = sexo_f
+      , fill = sexo_f
+    )
+    ,alpha = 0.10
+    ,position = position_dodge(width = 0)) +
+  scale_y_continuous(labels = scales::percent)+
+  scale_color_manual(values = c(
+    '#620C1A'
+    ,'#111F4F'
+    ,'#C29365'
+    ,'#6A9BB3'
+  ))+
+  scale_fill_manual(values = c(
+    '#620C1A'
+    ,'#111F4F'
+    ,'#C29365'
+    ,'#6A9BB3'
+  ))+
+  facet_wrap(~ano_f,ncol = 1)+
+  labs(
+    title = 'Proporção das pessoas que se deslocam a pé ou de bicicleta'
+    , subtitle = "Pessoas acima de 18 anos"
+    , x = "Intervalo de tempo (minutos)", y = "Proporção (%)"
+    , color = "Ano"
+    , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
+  )+
+  guides(color = guide_legend(
+    override.aes = list(linetype = 0))
+    , fill = "none")+
+  theme_minimal()
+
+ggsave(filename = "figures/prop_time_sexo1.jpg"
        ,width = 15
        ,height = 12
        ,scale = 1.2
