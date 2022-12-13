@@ -8,7 +8,7 @@ library(data.table)
 library(magrittr)
 
 # 2) read ------
-pns13_raw <- readr::read_rds("../../data/transporte_ativo_2008-2019/sample_pns2013_pos.rds")
+pns13_raw <- readr::read_rds("../../data/transporte_ativo_2008-2019/pns2013_design.rds")
 
 #pns13_dt <- readr::read_rds("../../data/transporte_ativo_2008-2019/pns132008.rds")
 # pns13_dt[,table(v1410),by = .(metro,urban)]

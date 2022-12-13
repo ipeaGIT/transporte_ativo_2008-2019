@@ -1,4 +1,4 @@
-# Load libraries -----
+# 1) Load libraries -----
 
 # https://www.ibge.gov.br/estatisticas/sociais/educacao/9127-pesquisa-nacional-por-amostra-de-domicilios.html?edicao=18338&t=microdados
 rm(list=ls())
@@ -8,7 +8,7 @@ library(data.table)
 library(magrittr)
 library(SAScii)
 
-# Read data ----
+# 2) Read data ----
 
 # microdados
 file_pes_path <- "../../data-raw/PNAD/2008/pnad_2008_20160817/2008/Dados/PES2008.TXT"
@@ -121,10 +121,13 @@ table(tmp_pes$V0102)
 # UF - state
 
 pnad2008_raw <- data.table::merge.data.table(x = tmp_pes
-                                         ,y = tmp_dom
-                                         , by = c("V0101", "V0102", "V0103","UF")
+                                         , y = tmp_dom
+                                         , by = c("V0101", "V0102"
+                                                  , "V0103","UF")
                                          , all = FALSE)
 
+
+break()
 # Clean memory
 rm(list=setdiff(ls(), c("pnad2008_raw")))
 gc(reset = T)
@@ -169,7 +172,7 @@ pnad2008[uf == 53, uf_name :="Federal District"]
 table(pnad2008$uf_name)
 
 # Create variable Metropolitan area
-pnad2008[v4727 == 1, metro := "Restante das UF"]
+pnad2008[, metro := "Restante das UF"]
 pnad2008[uf == 15 & v4727 == 1, metro := "Belém"]
 pnad2008[uf == 23 & v4727 == 1, metro := "Fortaleza"]
 pnad2008[uf == 26 & v4727 == 1, metro := "Recife"]
@@ -183,7 +186,7 @@ pnad2008[uf == 53 & v4727 == 1, metro := "Distrito Federal"]
 table(pnad2008$metro,exclude=FALSE)
 
 pnad2008[,country := "Brasil"]
-pnad2008[,dummyMetro := ifelse(is.na(metro),"Non-metro","Metro")]
+pnad2008[,dummyMetro := ifelse(metro == "Restante das UF","Non-metro","Metro")]
 table(pnad2008$dummyMetro,exclude=FALSE)
 gc(reset = T)
 
@@ -358,7 +361,7 @@ summary(pnad2008$v4742)
 pnad2008[,v4742 := as.numeric(v4742)]
 pnad2008[,v4729 := as.numeric(v4729)]
 pnad2008[, decileBR:= as.numeric( cut(v4742
-                                      , breaks=Hmisc::wtd.quantile(x = v4742
+                                      , breaks = Hmisc::wtd.quantile(x = v4742
                                                                    , weights = v4729
                                                                    ,probs=seq(0, 1, by=0.1)
                                                                    , na.rm=T),
@@ -508,7 +511,4 @@ dir.create("../../data/transporte_ativo_2008-2019/")
 readr::write_rds(x = pnad2008
                  ,file = "../../data/transporte_ativo_2008-2019/pnad2008.rds"
                  ,compress = "gz")
-# readr::write_rds(x = tmp_dom
-#                  , file = "../../data/transporte_ativo_2008-2019/pnad2008dom.rds"
-#                  ,compress = "gz")
 

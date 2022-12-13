@@ -67,43 +67,41 @@ pre_stratified  <- survey::svydesign(
 
 # apply filter and update
 
-pre_stratified_total <- pre_stratified %>% 
+pres_total <- pre_stratified %>% 
   subset(. ,!is.na(v1410)) %>% 
   update(v1410sim = as.numeric(v1410 == "Sim")) %>% 
   subset(. ,v8005 >= 18 )
 
-pre_stratified_urban <- pre_stratified %>% 
-  subset(. ,!is.na(v1410)) %>% 
-  update(v1410sim = as.numeric(v1410 == "Sim")) %>% 
-  subset(. ,v8005 >= 18 ) %>% 
+pres_urbano <- pres_total %>% 
   subset(. ,urban == "Urbano") 
 
-pre_stratified_v1410 <- pre_stratified %>% 
-  subset(. ,v1410 == "Sim") %>% 
-  subset(. ,v8005 >= 18 ) %>% 
-  subset(. ,dummyMetro  == "Metro") 
+pres_todo_traj <- pres_urbano %>% 
+  subset(. ,v1410 == "Sim") 
 
+pres_todo_parte_traj_metro <-  pres_urbano %>% 
+  subset(.,dummyMetro == "Metro")
+  
 # 3) PostStratify ----
 
 system.time({
-  pnad_design <- survey::as.svrepdesign(
-    design = pre_stratified_total
+  pos_total <- survey::as.svrepdesign(
+    design = pres_total
     ,type = "bootstrap"
     ,replicates = 100
   )
 })
 
 system.time({
-  pnad_design_urban <- survey::as.svrepdesign(
-    design = pre_stratified_urban
+  pos_urbano <- survey::as.svrepdesign(
+    design = pres_urbano
     ,type = "bootstrap"
     ,replicates = 100
   )
 })
 
 system.time({
-  pnad_design_v1410 <- survey::as.svrepdesign(
-    design = pre_stratified_v1410
+  pos_todo_traj <- survey::as.svrepdesign(
+    design = pres_todo_traj
     ,type = "bootstrap"
     ,replicates = 100
   )
@@ -115,7 +113,7 @@ system.time({
 
 df1 <- survey::svyby(formula = ~ v1410sim   
                      , by =  ~ region + quintileRegion
-                     , design = pnad_design
+                     , design = pos_total
                      , vartype = "ci"
                      , ci = TRUE
                      , level = 0.95
@@ -138,7 +136,7 @@ future::plan("multisession",workers  = 20)
 df2a <- survey::svyby(
   ~v1410sim
   , ~ country
-  , design = pnad_design
+  , design = pos_total
   , vartype = "ci", ci = TRUE
   , level = 0.95, FUN = svyciprop
   , multicore = getOption("survey.multicore")
@@ -160,7 +158,7 @@ readr::write_rds(
 df2c <- survey::svyby(
   ~ v1410sim
   , ~ country + urban
-  , design = pnad_design
+  , design = pos_total
   , vartype = "ci", ci = TRUE
   , level = 0.95, FUN = svyciprop
   , multicore = getOption("survey.multicore")
@@ -182,7 +180,7 @@ readr::write_rds(
 
 df3a <- survey::svyby(
   ~ v1410sim, ~ dummyMetro
-  , design = pnad_design
+  , design = pos_urbano
   , vartype = "ci", ci = TRUE
   , level = 0.95, FUN = svyciprop
   , multicore = getOption("survey.multicore")
@@ -204,7 +202,7 @@ readr::write_rds(
 df4a <- survey::svyby(
   formula = ~ v1410sim   
   , by = ~  sexo 
-  , design = pnad_design_urban
+  , design = pos_urbano
   , vartype = "ci", ci = TRUE
   , level = 0.95, FUN = svyciprop
   , multicore = getOption("survey.multicore")
@@ -222,12 +220,12 @@ readr::write_rds(
   ,compress = "gz"
 )
 
-# > p_actv ~ sexo + idade ----
+# > p_actv ~ sexo + age ----
 
 df4c <- survey::svyby(
   formula = ~ v1410sim
   , by = ~ agegroup  + sexo
-  , design = pnad_design_urban
+  , design = pos_urbano
   , vartype = "ci", ci = TRUE
   , level = 0.95, FUN = svyciprop
   , multicore = getOption("survey.multicore")
@@ -242,13 +240,32 @@ readr::write_rds(
   ,x = list("sexo_age" = df4c)
   ,compress = "gz"
 )
+# > p_actv ~ sexo + ageLarge ----
 
+df4c <- survey::svyby(
+  formula = ~ v1410sim
+  , by = ~ AGE  + sexo
+  , design = pos_urbano
+  , vartype = "ci", ci = TRUE
+  , level = 0.95, FUN = svyciprop
+  , multicore = getOption("survey.multicore")
+  , verbose = TRUE
+  , na.rm.all = TRUE
+  , drop.empty.groups = TRUE
+)
+
+df4c
+readr::write_rds(
+  file = "../../data/transporte_ativo_2008-2019/export_pnad08/sexo_ageLarge.rds"
+  ,x = list("sexo_age" = df4c)
+  ,compress = "gz"
+)
 # > p_actv ~ sexo + escolaridade ----
 
 df4c <- survey::svyby(
   formula = ~ v1410sim
   , by = ~ edugroup + sexo
-  , design = pnad_design_urban
+  , design = pos_urbano
   , vartype = "ci", ci = TRUE
   , level = 0.95, FUN = svyciprop
   , multicore = getOption("survey.multicore")
@@ -272,7 +289,7 @@ options(survey.lonely.psu = "adjust")
 df6a <- survey::svyby(
   formula = ~v1410sim
   , by = ~ sexo + raca_group
-  , design = pnad_design_urban
+  , design = pos_urbano
   , vartype = "ci", ci = TRUE
   , level = 0.95
   , FUN = svyciprop
@@ -288,12 +305,33 @@ readr::write_rds(
   ,compress = "gz"
 ) 
 
+# > p_actv ~ raca + escolaridade ----
+
+df4c <- survey::svyby(
+  formula = ~ v1410sim
+  , by = ~ edugroup + raca_group
+  , design = pos_urbano
+  , vartype = "ci", ci = TRUE
+  , level = 0.95, FUN = svyciprop
+  , multicore = getOption("survey.multicore")
+  , verbose = TRUE
+  , na.rm.all = TRUE
+  , drop.empty.groups = TRUE
+)
+df4c
+
+readr::write_rds(
+  file = "../../data/transporte_ativo_2008-2019/export_pnad08/raca_esc.rds"
+  ,x = list("raca_esc" = df4c)
+  ,compress = "gz"
+)
+
 # > p_actv ~ sexo + raca +  escolaridade ----
 
 df4f <- survey::svyby(
   formula = ~ v1410sim
   , by = ~ edugroup + sexo + raca_group 
-  , design = pnad_design_urban
+  , design = pos_urbano
   , vartype = "ci", ci = TRUE
   , level = 0.95, FUN = svyciprop
   , multicore = getOption("survey.multicore")
@@ -315,7 +353,7 @@ readr::write_rds(
 df5a <- survey::svyby(
   formula = ~v1410sim
   , by = ~ region + quintileRegion
-  , design = pnad_design_urban
+  , design = pos_urbano
   , vartype = "ci"
   , FUN = svyciprop
   , multicore = getOption("survey.multicore")
@@ -341,7 +379,7 @@ readr::write_rds(
 df5a <- survey::svyby(
   formula = ~v1410sim
   , by = ~ metro + quintileMetro
-  , design = pnad_design_urban
+  , design = pos_urbano
   , vartype = "ci"
   , FUN = svyciprop
   , multicore = getOption("survey.multicore")
@@ -365,7 +403,7 @@ readr::write_rds(
 df5 <- survey::svyby(
   formula = ~v1410sim
   , by = ~ country + quintileBR
-  , design = pnad_design_urban
+  , design = pos_urbano
   , vartype = "ci", ci = TRUE
   , level = 0.95
   , FUN = svyciprop
@@ -392,7 +430,7 @@ options(survey.lonely.psu = "adjust")
 time_00to09 <- survey::svyby(
   formula = ~actv_commutetime_00to09
   , by = ~ sexo
-  , design = pnad_design_v1410
+  , design = pres_todo_traj
   , FUN = svyciprop
   , multicore=getOption("survey.multicore")
   , verbose = TRUE
@@ -407,7 +445,7 @@ time_00to09
 time_10to19 <- survey::svyby(
   formula = ~actv_commutetime_10to19
   , by = ~ sexo
-  , design = pnad_design_v1410
+  , design = pres_todo_traj
   , FUN = svyciprop
   , vartype = "ci", ci = TRUE
   , level = 0.95
@@ -422,7 +460,7 @@ time_10to19
 time_20to29 <- survey::svyby(
   formula = ~actv_commutetime_20to29
   , by = ~ sexo
-  , design = pnad_design_v1410
+  , design = pres_todo_traj
   , FUN = svyciprop
   , vartype = "ci", ci = TRUE
   , level = 0.95
@@ -437,7 +475,7 @@ time_20to29
 time_30to44 <- survey::svyby(
   formula = ~actv_commutetime_30to44
   , by = ~ sexo
-  , design =pnad_design_v1410
+  , design =pres_todo_traj
   , FUN = svyciprop
   , vartype = "ci", ci = TRUE
   , level = 0.95
@@ -452,7 +490,7 @@ time_30to44
 time_45to59 <- survey::svyby(
   formula = ~actv_commutetime_45to59
   , by = ~ sexo
-  , design = pnad_design_v1410
+  , design = pres_todo_traj
   , FUN = svyciprop
   , vartype = "ci", ci = TRUE
   , level = 0.95

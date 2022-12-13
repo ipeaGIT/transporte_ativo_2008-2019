@@ -4,6 +4,11 @@ dir.create("../../data-raw/PNS/2013/")
 dir.create("../../data-raw/PNS/2019/")
 
 # PNS 2013----
+library(PNSIBGE)
+pns2013 <- get_pns(year=2013, design= FALSE,labels = FALSE)
+readr::write_rds(pns2013,"../../data-raw/PNS/2013/pns2013.rds",compress = "gz")
+
+
 download.file(url = "https://ftp.ibge.gov.br/PNS/2013/Microdados/Dados/PNS_2013.zip",
               destfile = "../../data-raw/PNS/2013/pns_2013_20200825.zip",mode = "wb")
 
@@ -20,6 +25,9 @@ download.file(url = "https://ftp.ibge.gov.br/PNS/2013/Microdados/Documentacao/Di
               destfile = "../../data-raw/PNS/2013/Dicionario_e_input_2013.zip",mode = "wb")
 
 # PNS 2019 -----
+
+pns2019 <- PNSIBGE::get_pns(year=2019, design= FALSE,labels = FALSE)
+readr::write_rds(pns2019,"../../data-raw/PNS/2019/pns2019.rds",compress = "gz")
 
 download.file(url = "https://ftp.ibge.gov.br/PNS/2019/Microdados/Dados/PNS_2019_20220525.zip",
               destfile = "../../data-raw/PNS/2019/pns_2019_20220525.zip",mode = "wb")
