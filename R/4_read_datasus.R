@@ -76,10 +76,17 @@ dados_acid1 <- dados_acid1[,list("pop" = sum(valor,na.rm = TRUE)
 
 dados_acid1[,deaths_100k := deaths / (pop / 100000)]
 
-dados_acid1[]
+dados_acid1[1:2,]
+dt_metro[1:2,]
 
-dados_acid[dt_metro,on = c("code_muni" = "code_muni_sus"),name_metro := i.name_metro]
+#dados_acid1[dt_metro,on = c("code_muni" = "code_muni_sus"),name_metro := i.name_metro]
 
 # save data ----
 
-readr::write_rds(dados_acid,"data/datasus/deaths_roads_metro.rds")
+readr::write_rds(dados_acid1,"data/datasus/deaths_roads_metro.rds")
+
+
+
+dados_acid <- readr::read_rds("data/datasus/deaths_roads_metro.rds")
+
+dados_acid[1:5,]
