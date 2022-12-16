@@ -15,7 +15,8 @@ state <- state$abbrev_state
 
 str_acid <- c(paste0("V0",c(1:89,98,99))
               ,paste0("V",c(1:89,98,99)))
-str_acid
+str_acid <- c(paste0("V0",c(90:97))
+              ,paste0("V",c(90:97)))
 
 # download acid-------
 dados_ext <- microdatasus::fetch_datasus(year_start = 2019
@@ -26,23 +27,56 @@ dados_inf <- microdatasus::fetch_datasus(year_start = 2019
                                          , information_system = "SIM-DOINF")
 setDT(dados_ext)
 setDT(dados_inf)
+
+# apenas acidentes
 dados1_ext <- dados_ext[grepl("^V",CAUSABAS_O),]
 dados1_inf <- dados_inf[grepl("^V",CAUSABAS_O),]
 
-dados_acid <- rbind(
-  dados1_ext[,.N,by = .(CODMUNOCOR)],
-  dados1_inf[,.N,by = .(CODMUNOCOR)])
+# remover acidentes que nao sao de transporte terrestre
+for(i in str_acid){
+  dados1_ext <- dados1_ext[!(CAUSABAS_O %like% i)]
+  dados1_inf <- dados1_inf[!(CAUSABAS_O %like% i)]
+}
 
-dados_acid <- dados_acid[,list(num_acid = sum(N)),by = .(CODMUNOCOR)]
+
+# by type of vehicle
+my_list <- list("walk" = paste0("V0",1:9),
+                "bike" = paste0("V",10:19),
+                "moto" = paste0("V",20:29),
+                "tric" = paste0("V",30:39),
+                "auto" = paste0("V",40:59),
+                "cami" = paste0("V",60:69),
+                "onib" = paste0("V",70:79),
+                "othe" = paste0("V",c(80:89,98:99)))
+
+for(i in names(my_list)){
+  vars <- my_list[i][[1]]
+  for(j in vars){
+    dados1_ext[CAUSABAS_O %like% j,causa_name := i]
+    dados1_inf[CAUSABAS_O %like% j,causa_name := i]
+    dados1_inf[CAUSABAS %like% j,causa_name := i]
+    dados1_inf[CAUSABAS %like% j,causa_name := i]
+  }
+}
+
+dados1_ext[is.na(causa_name)]
+dados1_ext$causa_name %>% table(.,useNA = "always")
+dados1_inf$causa_name %>% table(.,useNA = "always")
+dados1_ext[CAUSABAS_O %in% code_walk,]
+dados_acid <- rbind(
+  dados1_ext[,.N,by = .(CODMUNOCOR,causa_name)],
+  dados1_inf[,.N,by = .(CODMUNOCOR,causa_name)])
+
+dados_acid <- dados_acid[,list(num_acid = sum(N)),by = .(CODMUNOCOR,causa_name)]
 setnames(dados_acid,"CODMUNOCOR","code_muni_sus")
 
 # download pop proj 2019 -------
 
 sidrar::info_sidra(6579)
 dt_pop <- sidrar::get_sidra(x = 6579
-                  , period = "2019"
-                  , variable = 9324
-                  , geo = "City")
+                            , period = "2019"
+                            , variable = 9324
+                            , geo = "City")
 setDT(dt_pop)
 names(dt_pop) <- janitor::make_clean_names(names(dt_pop))
 dt_pop[,code_muni_sus := stringr::str_sub(string = municipio_codigo,start = 1,end = 6)]
@@ -72,7 +106,8 @@ dados_acid1 <- data.table::merge.data.table(
 )
 
 dados_acid1 <- dados_acid1[,list("pop" = sum(valor,na.rm = TRUE)
-                  ,"deaths" = sum(num_acid,na.rm = TRUE)),by = .(name_metro)]
+                                 ,"deaths" = sum(num_acid,na.rm = TRUE))
+                           ,by = .(name_metro)]
 
 dados_acid1[,deaths_100k := deaths / (pop / 100000)]
 
