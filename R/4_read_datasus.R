@@ -1,5 +1,5 @@
 
-
+# Load packages -----
 # remotes::install_github("rfsaldanha/microdatasus")
 rm(list=ls())
 
@@ -10,13 +10,10 @@ easypackages::packages('data.table'
                        ,'basedosdados')
 
 # download data
-state <- geobr::read_state()
-state <- state$abbrev_state
-
-str_acid <- c(paste0("V0",c(1:89,98,99))
-              ,paste0("V",c(1:89,98,99)))
-str_acid <- c(paste0("V0",c(90:97))
-              ,paste0("V",c(90:97)))
+state <- c('RO','AC','AM','RR','PA','AP','TO','MA'
+           ,'PI','CE','RN','PB','PE','AL','SE'
+           ,'BA','MG','ES','RJ','SP','PR','SC'
+           ,'RS','MS','MT','GO','DF')
 
 # download acid-------
 dados_ext <- microdatasus::fetch_datasus(year_start = 2019
@@ -33,6 +30,7 @@ dados1_ext <- dados_ext[grepl("^V",CAUSABAS_O),]
 dados1_inf <- dados_inf[grepl("^V",CAUSABAS_O),]
 
 # remover acidentes que nao sao de transporte terrestre
+str_acid <- c(paste0("V0",c(90:97)),paste0("V",c(90:97)))
 for(i in str_acid){
   dados1_ext <- dados1_ext[!(CAUSABAS_O %like% i)]
   dados1_inf <- dados1_inf[!(CAUSABAS_O %like% i)]
@@ -67,7 +65,8 @@ dados_acid <- rbind(
   dados1_ext[,.N,by = .(CODMUNOCOR,causa_name)],
   dados1_inf[,.N,by = .(CODMUNOCOR,causa_name)])
 
-dados_acid <- dados_acid[,list(num_acid = sum(N)),by = .(CODMUNOCOR,causa_name)]
+dados_acid <- dados_acid[,list("num_acid" = sum(N))
+                         ,by = .(CODMUNOCOR,causa_name)]
 setnames(dados_acid,"CODMUNOCOR","code_muni_sus")
 
 # download pop proj 2019 -------
@@ -95,33 +94,46 @@ dt_metro
 # merge data ----
 
 dados_acid1 <- data.table::merge.data.table(
-  x = dados_acid
-  ,y = dt_metro
-  ,by = 'code_muni_sus'
+  x = dados_acid  ,y = dt_metro  ,by = 'code_muni_sus'
+) %>% data.table::merge.data.table(
+  x = .  ,y = dt_pop  ,by = 'code_muni_sus'
 )
-dados_acid1 <- data.table::merge.data.table(
-  x = dados_acid1
-  ,y = dt_pop
-  ,by = 'code_muni_sus'
+tmp_pop_rm <- copy(dados_acid1)[,.SD[1],by = .(name_metro, municipio_codigo)]
+tmp_pop_rm <- tmp_pop_rm[,list(pop = sum(valor)),by = name_metro]
+
+
+dados_acid2 <- rbind(dados_acid1[,list(
+  "deaths" = sum(num_acid,na.rm = TRUE))
+                           ,by = .(name_metro,causa_name)],
+  dados_acid1[causa_name %in% c('walk','bike'),list(
+    "deaths" = sum(num_acid,na.rm = TRUE))
+    ,by = .(name_metro)][,causa_name := "walk+bike"],
+  dados_acid1[,list("deaths" = sum(num_acid,na.rm = TRUE))
+              ,by = .(name_metro)][,causa_name := "total"]
 )
 
-dados_acid1 <- dados_acid1[,list("pop" = sum(valor,na.rm = TRUE)
-                                 ,"deaths" = sum(num_acid,na.rm = TRUE))
-                           ,by = .(name_metro)]
+dados_acid2 <- dados_acid2[tmp_pop_rm,on = "name_metro"]
+dados_acid2[name_metro == "RM Porto Velho",]
 
-dados_acid1[,deaths_100k := deaths / (pop / 100000)]
-
-dados_acid1[1:2,]
-dt_metro[1:2,]
 
 #dados_acid1[dt_metro,on = c("code_muni" = "code_muni_sus"),name_metro := i.name_metro]
 
 # save data ----
 
-readr::write_rds(dados_acid1,"data/datasus/deaths_roads_metro.rds")
+readr::write_rds(dados_acid2,"data/datasus/deaths_roads_metro.rds")
 
 
+# Explore -----
 
 dados_acid <- readr::read_rds("data/datasus/deaths_roads_metro.rds")
 
-dados_acid[1:5,]
+dados_acid_all <- dados_acid[,list(
+  "deaths" = sum(deaths)
+),by = causa_name]
+
+dados_acid_all[,pop := sum(dados_acid[,.SD[1],by = name_metro]$pop)]
+
+dados_acid_all[,rel_100k := round(deaths / (pop / 1000000),2)]
+
+
+dados_acid_all[order(rel_100k)]
