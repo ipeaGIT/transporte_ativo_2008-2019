@@ -7,8 +7,7 @@ rm(list=ls())
 easypackages::packages('data.table'
                        ,'magrittr'
                        ,'ggplot2'
-                       ,'microdatasus'
-                       ,'basedosdados')
+                       ,'microdatasus')
 
 # download data
 state <- c('RO','AC','AM','RR','PA','AP','TO','MA'
@@ -17,15 +16,28 @@ state <- c('RO','AC','AM','RR','PA','AP','TO','MA'
            ,'RS','MS','MT','GO','DF')
 
 # download acid-------
+# dados_ext <- microdatasus::fetch_datasus(year_start = 2013
+#                                          , year_end = 2014
+#                                          , information_system = "SIM-DOEXT")
+# readr::write_rds(dados_ext,"data-raw/datasus/SIM-DOEXT_2013_to_2014.rds"
 # dados_ext <- microdatasus::fetch_datasus(year_start = 2015
 #                                          , year_end = 2019
 #                                          , information_system = "SIM-DOEXT")
 # readr::write_rds(dados_ext,"data-raw/datasus/SIM-DOEXT_2015_to_2019.rds"
 #                  ,compress = "gz")
 dados_ext <- readr::read_rds("data-raw/datasus/SIM-DOEXT_2015_to_2019.rds")
-dados_inf <- microdatasus::fetch_datasus(year_start = 2015
-                                         , year_end = 2019
-                                         , information_system = "SIM-DOINF")
+
+# dados_inf <- microdatasus::fetch_datasus(year_start = 2013
+#                                          , year_end = 2014
+#                                          , information_system = "SIM-DOINF")
+# readr::write_rds(dados_inf,"data-raw/datasus/SIM-DOINF_2013_to_2014.rds"
+#                  ,compress = "gz")
+# 
+# dados_inf <- microdatasus::fetch_datasus(year_start = 2015
+#                                          , year_end = 2019
+#                                          , information_system = "SIM-DOINF")
+# readr::write_rds(dados_inf,"data-raw/datasus/SIM-DOINF_2015_to_2019.rds"
+#                  ,compress = "gz")
 setDT(dados_ext)
 dados_inf <- dados_ext[1,CAUSABAS_O := "lala"]
 setDT(dados_inf)
