@@ -1,6 +1,7 @@
 # load and read -----
-
-rm(list=ls())
+rm(list=ls()) 
+data_path <- "../../data/transporte_ativo_2008-2019/" 
+data_path <- "data/"
 gc(reset=T)
 library(ggplot2)
 library(readr)
@@ -10,20 +11,22 @@ library(patchwork)
 library(openxlsx)
 
 # 1) prop ~ br + metro + sit ----------
-rm(list=ls())
+rm(list=ls()) 
+data_path <- "../../data/transporte_ativo_2008-2019/" 
+data_path <- "data/"
 gc(reset=T)
 # read
-pnad2008_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/br.rds")
-pns13_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/br.rds")
-pns19_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/br.rds")
+pnad2008_br <- readr::read_rds(paste0(data_path,"export_pnad08/br.rds"))
+pns13_br <- readr::read_rds(paste0(data_path,"export_pns13/br.rds"))
+pns19_br <- readr::read_rds(paste0(data_path,"export_pns19/br.rds"))
 
-pnad2008_dummyMetro <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/dummyMetro.rds")
-pns13_dummyMetro <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/dummyMetro.rds")
-pns19_dummyMetro <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/dummyMetro.rds")
+pnad2008_dummyMetro <- readr::read_rds(paste0(data_path,"export_pnad08/dummyMetro.rds"))
+pns13_dummyMetro <- readr::read_rds(paste0(data_path,"export_pns13/dummyMetro.rds"))
+pns19_dummyMetro <- readr::read_rds(paste0(data_path,"export_pns19/dummyMetro.rds"))
 
-pnad2008_sitbr <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/sit_brasil.rds")
-pns13_sitbr <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/sit_brasil.rds")
-pns19_sitbr <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/sit_brasil.rds")
+pnad2008_sitbr <- readr::read_rds(paste0(data_path,"export_pnad08/sit_brasil.rds"))
+pns13_sitbr <- readr::read_rds(paste0(data_path,"export_pns13/sit_brasil.rds"))
+pns19_sitbr <- readr::read_rds(paste0(data_path,"export_pns19/sit_brasil.rds"))
 
 
 # list
@@ -155,6 +158,12 @@ single_dt2[,region_f := factor(
               ,"Metropolitano \nUrbano","Não metropolitano \nUrbano")
 )]
 
+
+# text 
+single_dt2[region == "Rural"]
+single_dt2[region_f == "Metropolitano \nUrbano"]
+
+
 # plot
 ggplot(data = single_dt2
        , aes(x = factor(ano)
@@ -181,7 +190,22 @@ ggplot(data = single_dt2
   theme_classic()+
   # Accent, Dark2, Paired, Pastel1, Pastel2, Set1, Set2, Set3
   scale_fill_brewer(palette = "Pastel1") +
-  theme(legend.position = "bottom")
+  theme(legend.key.width=unit(2,"line"),
+        text = element_text(family = "Times New Roman"),
+        legend.position = "bottom",
+        legend.text = element_text(size = rel(0.8)
+                                   , family = "Times New Roman"
+                                   , face = "plain"),
+        legend.title = element_text(size = rel(0.95)
+                                    , family = "Times New Roman"
+                                    , face = "bold"),
+        title = element_text(size = 10
+                             , family = "Times New Roman"
+                             , face = "plain"),
+        plot.margin=unit(c(0,2,0,1),"mm"),
+        strip.text.x = element_text(size=rel(1.2)),
+        panel.background = element_rect(fill = "white",colour = NA),
+        )
 
 
 ggsave(filename = "figures/prop_metro_sit_brasil.png"
@@ -193,16 +217,18 @@ ggsave(filename = "figures/prop_metro_sit_brasil.png"
 
 # 3) prop ~ BR + sexo-----
 
-rm(list=ls())
+rm(list=ls()) 
+data_path <- "../../data/transporte_ativo_2008-2019/" 
+data_path <- "data/"
 
 # read files
-pnad2008_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/br.rds")
-pns13_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/br.rds")
-pns19_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/br.rds")
+pnad2008_br <- readr::read_rds(paste0(data_path,"export_pnad08/br.rds"))
+pns13_br <- readr::read_rds(paste0(data_path,"export_pns13/br.rds"))
+pns19_br <- readr::read_rds(paste0(data_path,"export_pns19/br.rds"))
 
-pnad2008_sexo <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/sexo.rds")
-pns13_sexo <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/sexo.rds")
-pns19_sexo <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/sexo.rds")
+pnad2008_sexo <- readr::read_rds(paste0(data_path,"export_pnad08/sexo.rds"))
+pns13_sexo <- readr::read_rds(paste0(data_path,"export_pns13/sexo.rds"))
+pns19_sexo <- readr::read_rds(paste0(data_path,"export_pns19/sexo.rds"))
 
 # to DT
 data.table::setDT(pnad2008_br$brasil)
@@ -313,14 +339,16 @@ ggsave(filename = "figures/prop_sexo_brasil.png"
        ,dpi = 300)
 
 # 4) EXP - prop dia ativ hab. -----
-rm(list=ls())
+rm(list=ls()) 
+data_path <- "../../data/transporte_ativo_2008-2019/" 
+data_path <- "data/"
 gc(reset = TRUE)
 library(ggplot2)
 library(data.table)
 library(magrittr)
 library(patchwork)
 
-pns19 <- readr::read_rds("../../data/transporte_ativo_2008-2019/pns2019_dt.rds")
+pns19 <- readr::read_rds("data/pns2019_dt.rds")
 
 # | P040     | Para ir ou voltar do trabalho, o(a) Sr(a) faz algum       |  both   |
 # |          | trajeto a pé ou de bicicleta?                             |         |
@@ -950,14 +978,16 @@ pns2019[
 
 
 # 5) EXP acidents ----
-rm(list=ls())
+rm(list=ls()) 
+data_path <- "../../data/transporte_ativo_2008-2019/" 
+data_path <- "data/"
 gc(reset = TRUE)
 library(ggplot2)
 library(data.table)
 library(magrittr)
 library(patchwork)
 
-pns19 <- readr::read_rds("../../data/transporte_ativo_2008-2019/pns2019_dt.rds")
+pns19 <- readr::read_rds(paste0(data_path,"pns2019_dt.rds"))
 #pns19 <- pns19[]
 
 # O009	O9	 Nos últimos doze meses, o(a) Sr(a) se envolveu em algum acidente de 
@@ -1488,14 +1518,14 @@ ggplot(tmp1) +
   theme_bw()
 
 # ||| extra proporcao mulheres -----
-rm(list=ls())
+rm(list=ls()) data_path <- "../../data/transporte_ativo_2008-2019/" data_path <- "data/"
 gc(reset = TRUE)
 library(ggplot2)
 library(data.table)
 library(magrittr)
 library(patchwork)
 
-pns19 <- readr::read_rds("../../data/transporte_ativo_2008-2019/pns2019_dt.rds")
+pns19 <- readr::read_rds("data/pns2019_dt.rds")
 
 pns19 %>% names() %>% sort()
 pns19$urban %>% unique()
@@ -1575,14 +1605,14 @@ tmp %>%
        ,title = "Prop mulheres X acidentes totais")
 
 # |||xxxxxx-----
-rm(list=ls())
+rm(list=ls()) data_path <- "../../data/transporte_ativo_2008-2019/" data_path <- "data/"
 gc(reset = TRUE)
 library(ggplot2)
 library(data.table)
 library(magrittr)
 library(patchwork)
 
-pns19 <- readr::read_rds("../../data/transporte_ativo_2008-2019/pns2019_dt.rds")
+pns19 <- readr::read_rds("data/pns2019_dt.rds")
 
 pns19 %>% names() %>% sort()
 pns19$urban %>% unique()

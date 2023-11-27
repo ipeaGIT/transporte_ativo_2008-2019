@@ -1,12 +1,22 @@
 # Load packages -----
 rm(list=ls())
 
+# remotes::install_github("rfsaldanha/microdatasus")
+#  devtools::install_github("danicat/read.dbc")
 easypackages::packages('data.table'
                        ,'magrittr'
                        ,'ggplot2'
                        ,'microdatasus')
 
 # 1) download acid-------
+## 2011 - 2012 ----
+file_datasus11_12 <- "data-raw/datasus/SIM-DOEXT_2011_to_2012.rds"
+if(!file.exists(file_datasus11_12)){
+  dados_ext <- microdatasus::fetch_datasus(year_start = 2013
+                                           , year_end = 2013
+                                           , information_system = "SIM-DOEXT")
+  readr::write_rds(dados_ext,file_datasus11_12,compress = "gz")
+}
 ## 2013 - 2014 ----
 file_datasus13_14 <- "data-raw/datasus/SIM-DOEXT_2013_to_2014.rds"
 if(!file.exists(file_datasus13_14)){

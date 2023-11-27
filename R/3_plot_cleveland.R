@@ -12,13 +12,15 @@ library(patchwork)
 
 # read files
 rm(list=ls())
-pnad2008_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/br_quint.rds")
-pns13_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/br_quint.rds")
-pns19_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/br_quint.rds")
+data_path <- "../../data/transporte_ativo_2008-2019/"
+data_path <- "data/"
+pnad2008_br <- readr::read_rds(paste0(data_path,"export_pnad08/br_quint.rds"))
+pns13_br <- readr::read_rds(paste0(data_path,"export_pns13/br_quint.rds"))
+pns19_br <- readr::read_rds(paste0(data_path,"export_pns19/br_quint.rds"))
 
-pnad2008_regionQuint <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/region_quint.rds")
-pns13_regionQuint <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/region_quint.rds")
-pns19_regionQuint <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/region_quint.rds")
+pnad2008_regionQuint <- readr::read_rds(paste0(data_path,"export_pnad08/region_quint.rds"))
+pns13_regionQuint <- readr::read_rds(paste0(data_path,"export_pns13/region_quint.rds"))
+pns19_regionQuint <- readr::read_rds(paste0(data_path,"export_pns19/region_quint.rds"))
 
 # set DT
 data.table::setDT(pnad2008_br$br_quint)
@@ -74,6 +76,12 @@ single_dt2 <- list(
 #   ci_u1 = ci_u 
 # )]
 
+single_dt2[,quintile := factor(x = quintile
+                               ,levels = 1:5
+                               ,labels = c("1 (20% mais pobres)"
+                                           ,2:4
+                                           ,"5 (20% mais ricos)"))]
+
 ggplot(data = single_dt2,
        aes(x = factor(ano)
            , y = mean
@@ -116,7 +124,22 @@ ggplot(data = single_dt2,
     , fill = "Quintil de\n renda"
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
   )+
-  theme_minimal()
+  theme_minimal()+
+  theme(legend.key.width=unit(2,"line"),
+        text = element_text(family = "Times New Roman"),
+        legend.text = element_text(size = rel(0.8)
+                                   , family = "Times New Roman"
+                                   , face = "plain"),
+        legend.title = element_text(size = rel(0.95)
+                                    , family = "Times New Roman"
+                                    , face = "bold"),
+        title = element_text(size = 10
+                             , family = "Times New Roman"
+                             , face = "plain"),
+        plot.margin=unit(c(0,2,0,1),"mm"),
+        strip.text.x = element_text(size=rel(1.2)),
+        panel.grid.major.y = element_line(colour = "grey92"),
+        panel.background = element_rect(fill = "white",colour = NA))
 
 
 ggsave(filename = "figures/prop_regiao_quint.jpg"
@@ -129,13 +152,15 @@ ggsave(filename = "figures/prop_regiao_quint.jpg"
 
 # read files
 rm(list=ls())
-pnad2008_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/br_quint.rds")
-pns13_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/br_quint.rds")
-pns19_br <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/br_quint.rds")
+data_path <- "../../data/transporte_ativo_2008-2019/"
+data_path <- "data/"
+pnad2008_br <- readr::read_rds(paste0(data_path,"export_pnad08/br_quint.rds"))
+pns13_br <- readr::read_rds(paste0(data_path,"export_pns13/br_quint.rds"))
+pns19_br <- readr::read_rds(paste0(data_path,"export_pns19/br_quint.rds"))
 
-pnad2008_regionQuint <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/metro_quint.rds")
-pns13_regionQuint <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/metro_quint.rds")
-pns19_regionQuint <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/metro_quint.rds")
+pnad2008_regionQuint <- readr::read_rds(paste0(data_path,"export_pnad08/metro_quint.rds"))
+pns13_regionQuint <- readr::read_rds(paste0(data_path,"export_pns13/metro_quint.rds"))
+pns19_regionQuint <- readr::read_rds(paste0(data_path,"export_pns19/metro_quint.rds"))
 
 # set DT
 data.table::setDT(pnad2008_br$br_quint)
@@ -178,6 +203,11 @@ single_dt2 <- list(
   
 ) %>% data.table::rbindlist()
 
+single_dt2[,quintile := factor(x = quintile
+                               ,levels = 1:5
+                               ,labels = c("1 (20% mais pobres)"
+                                           ,2:4
+                                           ,"5 (20% mais ricos)"))]
 
 # fix factors
 # single_dt2[,":="(
@@ -233,7 +263,24 @@ ggplot(data = single_dt2,
     , fill = "Quintil de\n renda"
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
   )+
-  theme_minimal()
+  theme_minimal()+  
+  theme(legend.position = "bottom",
+        legend.key.width=unit(2,"line"),
+        text = element_text(family = "Times New Roman"),
+        legend.text = element_text(size = rel(0.8)
+                                   , family = "Times New Roman"
+                                   , face = "plain"),
+        legend.title = element_text(size = rel(0.95)
+                                    , family = "Times New Roman"
+                                    , face = "bold"),
+        title = element_text(size = 10
+                             , family = "Times New Roman"
+                             , face = "plain"),
+        plot.margin=unit(c(0,2,0,1),"mm"),
+        strip.text.x = element_text(size=rel(1.2)),
+        panel.grid.major.y = element_line(colour = "grey92"),
+        panel.background = element_rect(fill = "white",colour = NA))
+
 
 
 ggsave(filename = "figures/prop_metro_quint.jpg"
@@ -247,10 +294,12 @@ ggsave(filename = "figures/prop_metro_quint.jpg"
 
 # read files
 rm(list=ls())
+data_path <- "../../data/transporte_ativo_2008-2019/"
+data_path <- "data/"
 gc(reset=TRUE)
-pnad2008 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/sexo_age.rds")
-pns13 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/sexo_age.rds")
-pns19 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/sexo_age.rds")
+pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/sexo_age.rds"))
+pns13 <- readr::read_rds(paste0(data_path,"export_pns13/sexo_age.rds"))
+pns19 <- readr::read_rds(paste0(data_path,"export_pns19/sexo_age.rds"))
 
 # set DT
 pnad2008 <- pnad2008$sexo_age
@@ -330,7 +379,7 @@ ggplot(data = single_dt2
     ,position = position_dodge(width = 0)
     #, width = .75
     ,shape = 21
-    ) +
+  ) +
   geom_ribbon(
     aes(
       ymin = ci_l
@@ -340,7 +389,8 @@ ggplot(data = single_dt2
     )
     ,alpha = 0.10
     ,position = position_dodge(width = 0.0)) +
-  scale_y_continuous(labels = scales::percent)+
+  scale_y_continuous(labels = scales::percent
+                     ,breaks = seq(0,0.35,by = 0.05))+
   facet_wrap(facets = ~sexo_f
              ,nrow = 2)+
   #viridis::scale_color_viridis(discrete = TRUE
@@ -363,14 +413,30 @@ ggplot(data = single_dt2
     ,'#6A9BB3'
   ))+
   labs(
-    title = 'Proporção das pessoas que se deslocam a pé ou de bicicleta'
-    , subtitle = "Pessoas acima de 18 anos conforme sexo e idade"
+    #title = 'Proporção das pessoas que se deslocam a pé ou de bicicleta'
+    #, subtitle = "Pessoas acima de 18 anos conforme sexo e idade"
     , x = "Faixa etária", y = "Proporção (%)"
     , fill = "Ano"
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
   )+
   guides(color = "none")+
-  theme_minimal()
+  theme_minimal()+
+  theme(legend.position = "bottom",
+        legend.key.width=unit(2,"line"),
+        text = element_text(family = "Times New Roman"),
+        legend.text = element_text(size = rel(0.8)
+                                   , family = "Times New Roman"
+                                   , face = "plain"),
+        legend.title = element_text(size = rel(0.95)
+                                    , family = "Times New Roman"
+                                    , face = "bold"),
+        title = element_text(size = 10
+                             , family = "Times New Roman"
+                             , face = "plain"),
+        plot.margin=unit(c(0,2,0,1),"mm"),
+        strip.text.x = element_text(size=rel(1.2)),
+        panel.grid.major.y = element_line(colour = "grey92"),
+        panel.background = element_rect(fill = "white",colour = NA))
 
 
 ggsave(filename = "figures/prop_idade_sexo.jpg"
@@ -415,7 +481,8 @@ ggplot(data = single_dt2
     )
     ,alpha = 0.10
     ,position = position_dodge(width = 0.0)) +
-  scale_y_continuous(labels = scales::percent)+
+  scale_y_continuous(labels = scales::percent
+                     ,breaks = seq(0,0.35,0.05))+
   facet_wrap(facets = ~sexo_f
              ,nrow = 2)+
   #viridis::scale_color_viridis(discrete = TRUE
@@ -445,8 +512,23 @@ ggplot(data = single_dt2
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
   )+
   guides(color = "none")+
-  theme_minimal()
-
+  theme_minimal()+   
+  theme(legend.position = "bottom",
+        legend.key.width=unit(2,"line"),
+        text = element_text(family = "Times New Roman"),
+        legend.text = element_text(size = rel(0.8)
+                                   , family = "Times New Roman"
+                                   , face = "plain"),
+        legend.title = element_text(size = rel(0.95)
+                                    , family = "Times New Roman"
+                                    , face = "bold"),
+        title = element_text(size = 10
+                             , family = "Times New Roman"
+                             , face = "plain"),
+        plot.margin=unit(c(0,2,0,1),"mm"),
+        strip.text.x = element_text(size=rel(1.2)),
+        panel.grid.major.y = element_line(colour = "grey92"),
+        panel.background = element_rect(fill = "white",colour = NA))
 
 ggsave(filename = "figures/prop_idade_sexo.jpg"
        ,width = 15
@@ -458,10 +540,12 @@ ggsave(filename = "figures/prop_idade_sexo.jpg"
 
 # read files
 rm(list=ls())
+data_path <- "../../data/transporte_ativo_2008-2019/"
+data_path <- "data/"
 gc(reset=TRUE)
-pnad2008 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/sexo_ageLarge.rds")
-pns13 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/sexo_ageLarge.rds")
-pns19 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/sexo_ageLarge.rds")
+pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/sexo_ageLarge.rds"))
+pns13 <- readr::read_rds(paste0(data_path,"export_pns13/sexo_ageLarge.rds"))
+pns19 <- readr::read_rds(paste0(data_path,"export_pns19/sexo_ageLarge.rds"))
 
 # set DT
 pnad2008 <- pnad2008$sexo_age
@@ -515,6 +599,12 @@ single_dt2[
     x = sexo
     ,levels = c("Feminino","Masculino")
   )]
+
+# text 
+single_dt2[agegroup_f == "65+"]
+single_dt2[agegroup_f == "65+" & sexo == "Masculino"]
+single_dt2[agegroup_f == "Masculino" & ano == "2019"]
+
 ##  plot v1 ----
 ggplot(data = single_dt2
        ,aes(
@@ -549,7 +639,8 @@ ggplot(data = single_dt2
     )
     ,alpha = 0.10
     ,position = position_dodge(width = 0.0)) +
-  scale_y_continuous(labels = scales::percent)+
+  scale_y_continuous(labels = scales::percent
+                     ,breaks = seq(0,0.35,0.05))+
   facet_wrap(facets = ~sexo_f
              ,nrow = 2)+
   #viridis::scale_color_viridis(discrete = TRUE
@@ -580,7 +671,23 @@ ggplot(data = single_dt2
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
   )+
   guides(color = "none")+
-  theme_minimal()
+  theme_minimal()+  
+  theme(legend.position = "bottom",
+        legend.key.width=unit(2,"line"),
+        text = element_text(family = "Times New Roman"),
+        legend.text = element_text(size = rel(0.8)
+                                   , family = "Times New Roman"
+                                   , face = "plain"),
+        legend.title = element_text(size = rel(0.95)
+                                    , family = "Times New Roman"
+                                    , face = "bold"),
+        title = element_text(size = 10
+                             , family = "Times New Roman"
+                             , face = "plain"),
+        plot.margin=unit(c(0,2,0,1),"mm"),
+        strip.text.x = element_text(size=rel(1.2)),
+        panel.grid.major.y = element_line(colour = "grey92"),
+        panel.background = element_rect(fill = "white",colour = NA))
 
 ggsave(filename = "figures/prop_idade_sexo_v2.jpg"
        ,width = 15
@@ -623,9 +730,27 @@ ggplot(data = single_dt2
     , x = "Ano"
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
   )+
-  #guides(color = "none")+
-  theme_minimal()
-
+  theme_minimal()+  
+  theme(legend.position = "bottom",
+        legend.key.width=unit(2,"line"),
+        text = element_text(family = "Times New Roman"),
+        legend.text = element_text(size = rel(0.8)
+                                   , family = "Times New Roman"
+                                   , face = "plain"),
+        legend.title = element_text(size = rel(0.95)
+                                    , family = "Times New Roman"
+                                    , face = "bold"),
+        title = element_text(size = 10
+                             , family = "Times New Roman"
+                             , face = "plain"),
+        plot.margin=unit(c(0,2,0,1),"mm"),
+        strip.text.x = element_text(size=rel(1.2)),
+        panel.grid.major.y = element_line(colour = "grey92"),
+        panel.background = element_rect(fill = "white",colour = NA),
+        legend.box.background = element_rect(fill=alpha('white', 0.7),
+                                             colour = "#A09C9C",
+                                             linewidth = 0.5,
+                                             linetype = "solid"))
 
 ggsave(filename = "figures/prop_idade_sexo_v1.jpg"
        ,width = 15
@@ -637,10 +762,12 @@ ggsave(filename = "figures/prop_idade_sexo_v1.jpg"
 
 # read files
 rm(list=ls())
+data_path <- "../../data/transporte_ativo_2008-2019/"
+data_path <- "data/"
 gc(reset=TRUE)
-pnad2008 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/sexo_race.rds")
-pns13 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/sexo_raca.rds")
-pns19 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/sexo_race.rds")
+pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/sexo_race.rds"))
+pns13 <- readr::read_rds(paste0(data_path,"export_pns13/sexo_raca.rds"))
+pns19 <- readr::read_rds(paste0(data_path,"export_pns19/sexo_race.rds"))
 
 # set DT
 pnad2008 <- pnad2008$sexo_race
@@ -711,6 +838,10 @@ single_dt2[
 
 
 single_dt2
+# text 
+single_dt2[sexo == "Feminino" & ano == "2019"]
+single_dt2[sexo == "Masculino" & ano == "2019"]
+
 
 # plot
 ggplot(data = single_dt2
@@ -766,8 +897,20 @@ ggplot(data = single_dt2
   guides(color = guide_legend(
     override.aes = list(linetype = 0))
     , fill = "none")+
-  theme_minimal()+
-  theme(legend.position = "bottom")
+  theme_minimal()+  
+  theme(legend.key.width=unit(2,"line"),
+        legend.position = "bottom",
+        text = element_text(family = "Times New Roman"),
+        legend.text = element_text(size = rel(1)
+                                   , family = "Times New Roman"
+                                   , face = "plain"),
+        legend.title = element_text(size = rel(1)
+                                    , family = "Times New Roman"
+                                    , face = "bold"),
+        axis.text = element_text(size=rel(1.1)),
+        plot.margin=unit(c(0,2,0,1),"mm"),
+        strip.text.x = element_text(size=rel(1.2)),
+        panel.background = element_rect(fill = "white",colour = NA))
 
 
 ggsave(filename = "figures/prop_raca_sexo.jpg"
@@ -780,10 +923,12 @@ ggsave(filename = "figures/prop_raca_sexo.jpg"
 # 5) prop ~ sexo + ESC ----------
 # read files
 rm(list=ls())
+data_path <- "../../data/transporte_ativo_2008-2019/"
+data_path <- "data/"
 gc(reset=TRUE)
-pnad2008 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/sexo_esc.rds")
-pns13 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/sexo_esc.rds")
-pns19 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/sexo_esc.rds")
+pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/sexo_esc.rds"))
+pns13 <- readr::read_rds(paste0(data_path,"export_pns13/sexo_esc.rds"))
+pns19 <- readr::read_rds(paste0(data_path,"export_pns19/sexo_esc.rds"))
 
 # set DT
 pnad2008 <- pnad2008$sexo_esc
@@ -841,8 +986,11 @@ single_dt2[
     ,levels = c("Masculino","Feminino")
   )]
 
-
-single_dt2
+# text
+single_dt2[edugroup == "Sem instrução + Fundamental incompleto" & 
+             ano == 2019,round(mean * 100 ,1),by = sexo]
+single_dt2[edugroup == "Superior completo" & 
+             ano == 2019,round(mean * 100 ,1),by = sexo]
 
 # plot
 ggplot(data = single_dt2
@@ -889,8 +1037,8 @@ ggplot(data = single_dt2
   #  ,'#111F4F'
   #  ,'#C29365'
   #  ,'#6A9BB3'
-  #))+
-  viridis::scale_color_viridis(discrete = TRUE,alpha = 1,option = "H")+
+#))+
+viridis::scale_color_viridis(discrete = TRUE,alpha = 1,option = "H")+
   viridis::scale_fill_viridis(discrete = TRUE,alpha = 1,option = "H")+
   labs(
     #title = 'Proporção das pessoas que se deslocam a pé ou de bicicleta'
@@ -904,7 +1052,24 @@ ggplot(data = single_dt2
   guides(color = guide_legend(
     override.aes = list(linetype = 0))
     , fill = "none")+
-  theme_minimal()
+  theme_minimal()+   
+  theme(legend.key.width=unit(2,"line"),
+        text = element_text(family = "Times New Roman"),
+        legend.text = element_text(size = rel(0.8)
+                                   , family = "Times New Roman"
+                                   , face = "plain"),
+        legend.title = element_text(size = rel(0.95)
+                                    , family = "Times New Roman"
+                                    , face = "bold"),
+        title = element_text(size = 10
+                             , family = "Times New Roman"
+                             , face = "plain"),
+        plot.margin=unit(c(0,2,0,1),"mm"),
+        strip.text.x = element_text(size=rel(1.2)),
+        panel.grid.major.y = element_line(colour = "grey92"),
+        panel.background = element_rect(fill = "white",colour = NA))
+
+
 
 ggsave(filename = "figures/prop_escolaridade_sexo.jpg"
        ,width = 15
@@ -918,10 +1083,12 @@ ggsave(filename = "figures/prop_escolaridade_sexo.jpg"
 
 # read files
 rm(list=ls())
+data_path <- "../../data/transporte_ativo_2008-2019/"
+data_path <- "data/"
 gc(reset = TRUE)
-pnad2008 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/raca_esc.rds")
-pns13 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/raca_esc.rds")
-pns19 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/raca_esc.rds")
+pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/raca_esc.rds"))
+pns13 <- readr::read_rds(paste0(data_path,"export_pns13/raca_esc.rds"))
+pns19 <- readr::read_rds(paste0(data_path,"export_pns19/raca_esc.rds"))
 
 # set DT
 pnad2008 <- pnad2008$raca_esc
@@ -1040,7 +1207,7 @@ ggplot(data = single_dt2[!is.na(raca_group),]
   guides(color = guide_legend(
     override.aes = list(linetype = 0))
     , fill = "none")+
-theme_minimal()
+  theme_minimal()+   theme(legend.key.width=unit(2,"line"),         text = element_text(family = "Times New Roman"),         legend.text = element_text(size = rel(0.8)                                    , family = "Times New Roman"                                    , face = "plain"),         legend.title = element_text(size = rel(0.95)                                     , family = "Times New Roman"                                     , face = "bold"),         title = element_text(size = 10                              , family = "Times New Roman"                              , face = "plain"),         plot.margin=unit(c(0,2,0,1),"mm"),         strip.text.x = element_text(size=rel(1.2)),         panel.grid.major.y = element_line(colour = "grey92"),         panel.background = element_rect(fill = "white",colour = NA),         legend.box.background = element_rect(fill=alpha('white', 0.7),                                              colour = "#A09C9C",                                              linewidth = 0.5,                                              linetype = "solid"))
 
 ggsave(filename = "figures/prop_escolaridade_raca.jpg"
        ,width = 15
@@ -1053,35 +1220,37 @@ ggsave(filename = "figures/prop_escolaridade_raca.jpg"
 
 # read files
 rm(list=ls())
+data_path <- "../../data/transporte_ativo_2008-2019/"
+data_path <- "data/"
 gc(reset = TRUE)
-pnad2008 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pnad08/time_dummy.rds")
-pns13 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns13/time_dummy.rds")
-pns19 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/time_dummy.rds")
+pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/time_dummy.rds"))
+pns13 <- readr::read_rds(paste0(data_path,"export_pns13/time_dummy.rds"))
+pns19 <- readr::read_rds(paste0(data_path,"export_pns19/time_dummy.rds"))
 
 # set DT
 pnad2008 <- data.table::rbindlist(
   list(  setDT(pnad2008$time_00to09)[,":="( time = "00to09", mean = actv_commutetime_00to09)][, actv_commutetime_00to09 := NULL]
-        ,setDT(pnad2008$time_10to19)[,":="( time = "10to19", mean = actv_commutetime_10to19)][, actv_commutetime_10to19 := NULL]
-        ,setDT(pnad2008$time_20to29)[,":="( time = "20to29", mean = actv_commutetime_20to29)][, actv_commutetime_20to29 := NULL]
-        ,setDT(pnad2008$time_30to44)[,":="( time = "30to44", mean = actv_commutetime_30to44)][, actv_commutetime_30to44 := NULL]
-        ,setDT(pnad2008$time_45to59)[,":="( time = "45to59", mean = actv_commutetime_45to59)][, actv_commutetime_45to59 := NULL])
+         ,setDT(pnad2008$time_10to19)[,":="( time = "10to19", mean = actv_commutetime_10to19)][, actv_commutetime_10to19 := NULL]
+         ,setDT(pnad2008$time_20to29)[,":="( time = "20to29", mean = actv_commutetime_20to29)][, actv_commutetime_20to29 := NULL]
+         ,setDT(pnad2008$time_30to44)[,":="( time = "30to44", mean = actv_commutetime_30to44)][, actv_commutetime_30to44 := NULL]
+         ,setDT(pnad2008$time_45to59)[,":="( time = "45to59", mean = actv_commutetime_45to59)][, actv_commutetime_45to59 := NULL])
 )
 
 pns13    <- data.table::rbindlist(
   list(  setDT(pns13$time_00to09)[,":="( time = "00to09", mean = actv_commutetime_00to09)][, actv_commutetime_00to09 := NULL]
-        ,setDT(pns13$time_10to19)[,":="( time = "10to19", mean = actv_commutetime_10to19)][, actv_commutetime_10to19 := NULL]
-        ,setDT(pns13$time_20to29)[,":="( time = "20to29", mean = actv_commutetime_20to29)][, actv_commutetime_20to29 := NULL]
-        ,setDT(pns13$time_30to44)[,":="( time = "30to44", mean = actv_commutetime_30to44)][, actv_commutetime_30to44 := NULL]
-        ,setDT(pns13$time_45to59)[,":="( time = "45to59", mean = actv_commutetime_45to59)][, actv_commutetime_45to59 := NULL]
+         ,setDT(pns13$time_10to19)[,":="( time = "10to19", mean = actv_commutetime_10to19)][, actv_commutetime_10to19 := NULL]
+         ,setDT(pns13$time_20to29)[,":="( time = "20to29", mean = actv_commutetime_20to29)][, actv_commutetime_20to29 := NULL]
+         ,setDT(pns13$time_30to44)[,":="( time = "30to44", mean = actv_commutetime_30to44)][, actv_commutetime_30to44 := NULL]
+         ,setDT(pns13$time_45to59)[,":="( time = "45to59", mean = actv_commutetime_45to59)][, actv_commutetime_45to59 := NULL]
   )
 )
 
 pns19    <- data.table::rbindlist( 
   list( setDT(pns19$time_00to09)[,":="( time = "00to09", mean = actv_commutetime_00to09)][, actv_commutetime_00to09 := NULL]
-       ,setDT(pns19$time_10to19)[,":="( time = "10to19", mean = actv_commutetime_10to19)][, actv_commutetime_10to19 := NULL]
-       ,setDT(pns19$time_20to29)[,":="( time = "20to29", mean = actv_commutetime_20to29)][, actv_commutetime_20to29 := NULL]
-       ,setDT(pns19$time_30to44)[,":="( time = "30to44", mean = actv_commutetime_30to44)][, actv_commutetime_30to44 := NULL]
-       ,setDT(pns19$time_45to59)[,":="( time = "45to59", mean = actv_commutetime_45to59)][, actv_commutetime_45to59 := NULL]
+        ,setDT(pns19$time_10to19)[,":="( time = "10to19", mean = actv_commutetime_10to19)][, actv_commutetime_10to19 := NULL]
+        ,setDT(pns19$time_20to29)[,":="( time = "20to29", mean = actv_commutetime_20to29)][, actv_commutetime_20to29 := NULL]
+        ,setDT(pns19$time_30to44)[,":="( time = "30to44", mean = actv_commutetime_30to44)][, actv_commutetime_30to44 := NULL]
+        ,setDT(pns19$time_45to59)[,":="( time = "45to59", mean = actv_commutetime_45to59)][, actv_commutetime_45to59 := NULL]
   )
 )
 
@@ -1179,7 +1348,7 @@ ggplot(single_dt2
   guides(color = guide_legend(
     override.aes = list(linetype = 0))
     , fill = "none")+
-  theme_minimal()
+  theme_minimal()+   theme(legend.key.width=unit(2,"line"),         text = element_text(family = "Times New Roman"),         legend.text = element_text(size = rel(0.8)                                    , family = "Times New Roman"                                    , face = "plain"),         legend.title = element_text(size = rel(0.95)                                     , family = "Times New Roman"                                     , face = "bold"),         title = element_text(size = 10                              , family = "Times New Roman"                              , face = "plain"),         plot.margin=unit(c(0,2,0,1),"mm"),         strip.text.x = element_text(size=rel(1.2)),         panel.grid.major.y = element_line(colour = "grey92"),         panel.background = element_rect(fill = "white",colour = NA),         legend.box.background = element_rect(fill=alpha('white', 0.7),                                              colour = "#A09C9C",                                              linewidth = 0.5,                                              linetype = "solid"))
 
 
 ggsave(filename = "figures/prop_time_sexo.jpg"
@@ -1244,7 +1413,7 @@ ggplot(single_dt2
   guides(color = guide_legend(
     override.aes = list(linetype = 0))
     , fill = "none")+
-  theme_minimal()
+  theme_minimal()+   theme(legend.key.width=unit(2,"line"),         text = element_text(family = "Times New Roman"),         legend.text = element_text(size = rel(0.8)                                    , family = "Times New Roman"                                    , face = "plain"),         legend.title = element_text(size = rel(0.95)                                     , family = "Times New Roman"                                     , face = "bold"),         title = element_text(size = 10                              , family = "Times New Roman"                              , face = "plain"),         plot.margin=unit(c(0,2,0,1),"mm"),         strip.text.x = element_text(size=rel(1.2)),         panel.grid.major.y = element_line(colour = "grey92"),         panel.background = element_rect(fill = "white",colour = NA),         legend.box.background = element_rect(fill=alpha('white', 0.7),                                              colour = "#A09C9C",                                              linewidth = 0.5,                                              linetype = "solid"))
 
 ggsave(filename = "figures/prop_time_sexo1.jpg"
        ,width = 15
@@ -1257,11 +1426,13 @@ ggsave(filename = "figures/prop_time_sexo1.jpg"
 
 # read files
 rm(list=ls())
+data_path <- "../../data/transporte_ativo_2008-2019/"
+data_path <- "data/"
 gc(reset=TRUE)
 
 
-pns19_mean <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/")
-pns19 <- readr::read_rds("../../data/transporte_ativo_2008-2019/export_pns19/metro_quint.rds")
+pns19_mean <- readr::read_rds(paste0(data_path,"export_pns19/"))
+pns19 <- readr::read_rds(paste0(data_path,"export_pns19/metro_quint.rds"))
 
 # add columns
 pns19 <- pns19$region_quint_1
@@ -1298,34 +1469,53 @@ single_dt2[
 
 # plot
 tmp_plot <- single_dt2[quintileMetro %in% c(1,3,5)
-                   # & metro != "Distrito Federal"
-                   # & metro != "Belém"
-                   # & metro != "Fortaleza"
-                    ,]
+                       # & metro != "Distrito Federal"
+                       # & metro != "Belém"
+                       # & metro != "Fortaleza"
+                       ,]
+
+# text 
+values_city <- function(city){
+tmp_plot[metro_f == city,
+         paste0(round(mean * 100,1),"% ",quintileMetro,"ºQ")] %>% 
+  gsub("\\.","\\,",.) %>% paste0(.,collapse = "; ")
+}
+values_city("Salvador")
+values_city("Belém")
+values_city("Recife")
+values_city("Fortaleza")
+
+tmp_plot[agegroup_f == "65+" & sexo == "Masculino"]
+tmp_plot[agegroup_f == "Masculino" & ano == "2019"]
+
+
 ggplot() + 
   # data
-  geom_errorbar(data = tmp_plot[quintileMetro != 3],
-    aes(
-      xmin = ci_l
-       , x = mean
-      , y = metro_f
-      , xmax = ci_u
-     , color = factor(quintileMetro_f)
-    ),width = .65#, #color = "black"
-    ,position = position_dodge(width = +0.25)
-    ,alpha = 0.5) +
+  geom_errorbar(data = tmp_plot[quintileMetro_f != 3],
+                aes(
+                  xmin = ci_l
+                  , x = mean
+                  , y = metro_f
+                  , xmax = ci_u
+                  , color = quintileMetro_f
+                ),width = .65#, #color = "black"
+                ,position = position_dodge(width = +0.25)
+                ,alpha = 0.5) +
   geom_point(data = tmp_plot,
-    aes(x = mean, y = metro_f,fill = quintileMetro_f)
-    , size = 3.5
-    , shape = 21
-    ,position = position_dodge(width = +0.25)
-    ,alpha = 1) +
+             aes(x = mean, y = metro_f,fill = quintileMetro_f)
+             , size = 3.5
+             , shape = 21
+             ,position = position_dodge(width = +0.25)
+             ,alpha = 1) +
   # scale
   scale_x_continuous(labels = scales::percent)+
   scale_fill_manual(values = c(
     viridisLite::viridis(10)[5], "black",viridisLite::viridis(10)[10]
-    ))+
-  scale_color_manual(values = rep("black",3))+
+  )
+  ,labels = c("1 \n(20% mais pobre)","3","5 \n(20% mais ricas)"))+
+  scale_color_manual(values = c("black","black")
+                     ,labels = c("1 \n(20% mais pobre)"
+                                 ,"5 \n(20% mais ricas)"))+
   #facet_wrap(~sexo_f,ncol = 2)+
   labs(
     #title = 'Proporção de pessoas que se deslocam a pé ou de bicicleta'
@@ -1336,12 +1526,29 @@ ggplot() +
     , fill = "Quintil"
     , caption = "Fonte: PNS (2019)"
   )+
-  guides(color = "none")+
-  theme_minimal()
+  guides(fill = guide_legend(label.position = "bottom"),
+         color = "none")+
+  theme_minimal()+     
+  theme(legend.position = "bottom",
+        legend.key.width=unit(2,"line"),
+        text = element_text(family = "Times New Roman"),
+        legend.text = element_text(size = rel(0.8)
+                                   , family = "Times New Roman"
+                                   , face = "plain"),
+        legend.title = element_text(size = rel(0.95)
+                                    , family = "Times New Roman"
+                                    , face = "bold"),
+        title = element_text(size = 10
+                             , family = "Times New Roman"
+                             , face = "plain"),
+        plot.margin=unit(c(0,2,0,1),"mm"),
+        strip.text.x = element_text(size=rel(1.2)),
+        panel.grid.major.y = element_line(colour = "grey92"),
+        panel.background = element_rect(fill = "white",colour = NA))
 
 
 ggsave(filename = "figures/prop_quint_metro.jpg"
-       ,width = 15
+       ,width = 12
        ,height = 12
        ,scale = 1.2
        ,units = "cm"
@@ -1373,7 +1580,7 @@ ggplot(
     , caption = "Fonte: PNS (2019)"
   )+
   guides(color = "none")+
-  theme_minimal()
+  theme_minimal()+   theme(legend.key.width=unit(2,"line"),         text = element_text(family = "Times New Roman"),         legend.text = element_text(size = rel(0.8)                                    , family = "Times New Roman"                                    , face = "plain"),         legend.title = element_text(size = rel(0.95)                                     , family = "Times New Roman"                                     , face = "bold"),         title = element_text(size = 10                              , family = "Times New Roman"                              , face = "plain"),         plot.margin=unit(c(0,2,0,1),"mm"),         strip.text.x = element_text(size=rel(1.2)),         panel.grid.major.y = element_line(colour = "grey92"),         panel.background = element_rect(fill = "white",colour = NA),         legend.box.background = element_rect(fill=alpha('white', 0.7),                                              colour = "#A09C9C",                                              linewidth = 0.5,                                              linetype = "solid"))
 
 
 ggsave(filename = "figures/prop_quint_metro_sexo1.jpg"
