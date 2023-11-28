@@ -47,6 +47,23 @@ if(!file.exists(file_INFdatasus15_19)){
                                            , information_system = "SIM-DOINF")
   readr::write_rds(dados_inf,file_INFdatasus15_19,compress = "gz")
 }
+## 2020 - 2021 ----
+file_EXTdatasus <-"data-raw/datasus/SIM-DOEXT_2020_to_2021.rds"
+if(!file.exists(file_EXTdatasus)){
+  dados_ext <- microdatasus::fetch_datasus(year_start = 2020
+                                           , year_end = 2021
+                                           , information_system = "SIM-DOEXT")
+  readr::write_rds(dados_ext,file_EXTdatasus,compress = "gz")
+}
+file_INFdatasus <- "data-raw/datasus/SIM-DOINF_2020_to_2021.rds"
+if(!file.exists(file_INFdatasus15_19)){
+  dados_inf <- microdatasus::fetch_datasus(year_start = 2020
+                                           , year_end = 2021
+                                           , information_system = "SIM-DOINF")
+  readr::write_rds(dados_inf,file_INFdatasus,compress = "gz")
+}
+
+
 # 2) Read acid ----- 
 filter_datasus <- function(filepath){
   #filepath = "data-raw/datasus/SIM-DOINF_2013_to_2014.rds"
@@ -157,11 +174,18 @@ filter_datasus <- function(filepath){
   # return
   return(dt)
 }
+## DT_MERGE ------
 
-dt_merge <- rbind(filter_datasus("data-raw/datasus/SIM-DOINF_2013_to_2014.rds"),
-                  filter_datasus("data-raw/datasus/SIM-DOEXT_2013_to_2014.rds"),
-                  filter_datasus("data-raw/datasus/SIM-DOINF_2015_to_2019.rds"),
-                  filter_datasus("data-raw/datasus/SIM-DOEXT_2015_to_2019.rds"))
+dt_merge <- rbind(
+  filter_datasus("data-raw/datasus/SIM-DOINF_2011_to_2012.rds"),
+  filter_datasus("data-raw/datasus/SIM-DOEXT_2011_to_2012.rds"),
+  filter_datasus("data-raw/datasus/SIM-DOINF_2013_to_2014.rds"),
+  filter_datasus("data-raw/datasus/SIM-DOEXT_2013_to_2014.rds"),
+  filter_datasus("data-raw/datasus/SIM-DOINF_2015_to_2019.rds"),
+  filter_datasus("data-raw/datasus/SIM-DOEXT_2015_to_2019.rds"),
+  filter_datasus("data-raw/datasus/SIM-DOINF_2020_to_2021.rds"),
+  filter_datasus("data-raw/datasus/SIM-DOEXT_2020_to_2021.rds")
+)
 
 # readr::write_rds(dt_merge,"data/datasus/deaths_cor_age_sexo.rds")
 
