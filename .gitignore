@@ -3,4 +3,5 @@
 .RData
 .Ruserdata
 data/arquivo/*
-data-raw/*
+data-raw/datasus/*
+data-raw/PNS/*
