@@ -8,12 +8,12 @@ easypackages::packages('data.table'
 
 # pop proj 2019 -------
 
-pop_13_to_19 <- "data-raw/sidrar/pop_2013_to_2019.rds"
+pop_13_to_19 <- "data-raw/sidrar/pop_2010_to_2021.rds"
 
 
 if(!file.exists(pop_13_to_19)){
   dt_pop <- sidrar::get_sidra(x = 6579
-                              , period = as.character(2013:2019)
+                              , period = as.character(2011:2021)
                               , variable = 9324
                               , geo = "City")
   data.table::setDT(dt_pop)

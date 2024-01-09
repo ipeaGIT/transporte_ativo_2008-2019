@@ -13,7 +13,7 @@ library(openxlsx)
 # 1) prop ~ br + metro + sit ----------
 rm(list=ls()) 
 data_path <- "../../data/transporte_ativo_2008-2019/" 
-data_path <- "data/"
+#data_path <- "data/"
 gc(reset=T)
 # read
 pnad2008_br <- readr::read_rds(paste0(data_path,"export_pnad08/br.rds"))
@@ -160,7 +160,8 @@ single_dt2[,region_f := factor(
 
 
 # text 
-single_dt2[region == "Rural"]
+single_dt2[region == "Brasil" & ano %in% c(2008,2019),round(100 * mean,2)] 
+single_dt2[region == "Rural"] 
 single_dt2[region_f == "Metropolitano \nUrbano"]
 
 
@@ -205,7 +206,7 @@ ggplot(data = single_dt2
         plot.margin=unit(c(0,2,0,1),"mm"),
         strip.text.x = element_text(size=rel(1.2)),
         panel.background = element_rect(fill = "white",colour = NA),
-        )
+  )
 
 
 ggsave(filename = "figures/prop_metro_sit_brasil.png"
@@ -219,7 +220,7 @@ ggsave(filename = "figures/prop_metro_sit_brasil.png"
 
 rm(list=ls()) 
 data_path <- "../../data/transporte_ativo_2008-2019/" 
-data_path <- "data/"
+#data_path <- "data/"
 
 # read files
 pnad2008_br <- readr::read_rds(paste0(data_path,"export_pnad08/br.rds"))
@@ -302,8 +303,12 @@ single_dt3[,":="(
 ,by = .(ano,sexo)
 ]
 
-
 single_dt3[is.na(ci_l1),":="(ci_l1 = ci_l , ci_u1 = ci_u)]
+
+# texto
+single_dt3[sexo == "Feminino" & 
+             ano %in% c(2008,2019) & 
+             type != "Sim, parte do trajeto",round(100 * mean,2)]
 
 # plot
 ggplot(data = single_dt3
@@ -341,14 +346,14 @@ ggsave(filename = "figures/prop_sexo_brasil.png"
 # 4) EXP - prop dia ativ hab. -----
 rm(list=ls()) 
 data_path <- "../../data/transporte_ativo_2008-2019/" 
-data_path <- "data/"
+#data_path <- "data/"
 gc(reset = TRUE)
 library(ggplot2)
 library(data.table)
 library(magrittr)
 library(patchwork)
 
-pns19 <- readr::read_rds("data/pns2019_dt.rds")
+pns19 <- readr::read_rds(sprintf("%s/pns2019_dt.rds",data_path))
 
 # | P040     | Para ir ou voltar do trabalho, o(a) Sr(a) faz algum       |  both   |
 # |          | trajeto a pé ou de bicicleta?                             |         |
@@ -387,9 +392,12 @@ mydiv <- function(n,d,round=3){round(100 * n/d,round)}
 # sexo | raca_group | vehicleOwnership | edugroup_large | quintileBR | region
 #| dummyMetro | agegroup
 #|||| sexo raca-----
+unique(pns19$dummyMetro)
+unique(pns19$metro)
 tmp <- pns19[V0025A == "1" & 
                urban == "Urbano" &
                !is.na(peso_morador_selec) &
+               dummyMetro == "Metro" & 
                !is.na(P040) &
                C008 >= 18,
              # inicio operation 
@@ -398,6 +406,15 @@ tmp <- pns19[V0025A == "1" &
                #ww <- V00291
                ww <- peso_morador_selec
                total      = sum(ww,na.rm = TRUE)
+               
+               # mean age
+               age <- weighted.mean(C008,ww,na.rm = TRUE)
+               age <- round(age,1)
+               age_ativ <-  weighted.mean(C008[P040 == "Sim, todo o trajeto"]
+                                          ,ww[P040 == "Sim, todo o trajeto"] 
+                                          ,na.rm = TRUE)
+               age_ativ <- round(age_ativ,1)
+               
                # trab
                trab_todo       = sum(ww[P040 == "Sim, todo o trajeto"],na.rm = TRUE)
                prop_ativ       = mydiv(trab_todo,total,1)
@@ -429,18 +446,24 @@ tmp <- pns19[V0025A == "1" &
                habt_mean_time = mean(actv_habttime[P042 > 0 ],na.rm = TRUE) / 2
                
                # return
-               list(total,trab_todo      
+               list(total,trab_todo, age, age_ativ
                     , trab_part,prop_ativ, prop_trab_part, total_trab_ativ, trab_mean_days, trab_mean_time
                     , habt_todo, habt_trab_todo, habt_mean_days, habt_mean_time
                     #, prop_trab_1d, prop_trab_2d, prop_trab_3d, prop_trab_4d, prop_trab_5d, prop_trab_6d, prop_trab_7d  
                     #, prop_habt_1d, prop_habt_2d, prop_habt_3d, prop_habt_4d, prop_habt_5d, prop_habt_6d, prop_habt_7d  
                )
-             },by = .(sexo,raca_group  )] %>% 
-  .[raca_group %in% c("Branca","Negra"),] %>%
-  #.[order(edugroup_large)] %>% .[!is.na(edugroup_large),] %>% 
-  #.[!is.na(edugroup),] %>% .[c(1,3,2,4),] %>% 
-  #.[!is.na(agegroup),]  %>% .[c(5,8,3,11,10,7,12,1,13),] %>% 
-  .[!is.na(sexo ),] %>% .[]
+             },by = .( sexo )]# %>% 
+tmp[]
+tmp[,prop := round(100 * total     /sum(total     ),2)]
+tmp[]
+tmp[,prop := round(100 * trab_todo /sum(trab_todo ),2)]
+tmp[]  
+
+#.[raca_group %in% c("Branca","Negra"),] %>%
+#.[order(edugroup_large)] %>% .[!is.na(edugroup_large),] %>% 
+#.[!is.na(edugroup),] %>% .[c(1,3,2,4),] %>% 
+#.[!is.na(agegroup),]  %>% .[c(5,8,3,11,10,7,12,1,13),] %>% 
+# .[!is.na(sexo ),] %>% .[]
 #.[!is.na(edugroup ),] %>%   .[c(1,5,6,7,2,4,3,8)]
 
 tmp1 <- tmp %>% 
@@ -467,7 +490,7 @@ sum_tmp[]
 ggplot(tmp1) +
   geom_col(aes(x= xlab ,y = value,fill = variable_f)
            ,width = 0.5,position = "stack")+
-   #geom_point(aes(x = sexo, y = value
+  #geom_point(aes(x = sexo, y = value
   #                , color = variable_f, shape = raca_group), size = 5)+
   #geom_point(aes(x = variable_f, y = value, color = xlab), size = 5)+
   geom_text(data = sum_tmp
@@ -741,7 +764,7 @@ tmp2[]
 ggplot(tmp1) +
   #geom_point(aes(x = quintileBR, y = value,color = variable_f), size = 3)+
   geom_col(aes(x = quintileBR, y = value,fill = variable_f)
-            ,position = "stack",width = 0.75)+
+           ,position = "stack",width = 0.75)+
   geom_text(data = tmp2
             ,aes(x = quintileBR,y = y,label = label,fontface=2)
             ,vjust =-0.25,hjust = 0.5,size= 3.15,color = "grey90")+
@@ -1222,7 +1245,7 @@ tmp <- pns19[V0025A == "1" &
                
                sub <- setdiff(ids_acid_total,ids_ativ)
                if(length(sub) > 0) ids_ativ <- c(ids_ativ,sub)
-
+               
                # stats
                total      = sum(ww,na.rm = TRUE)
                total_ativ = sum(ww[ids_ativ],na.rm = TRUE)
@@ -1267,7 +1290,7 @@ tmp <- pns19[V0025A == "1" &
 tmp[]
 
 tmp1 <- tmp %>% 
- # melt.data.table(., measure.vars = c("N_acid_walk", "N_acid_bici")
+  # melt.data.table(., measure.vars = c("N_acid_walk", "N_acid_bici")
   melt.data.table(., measure.vars = c("prop_walk_acid", "prop_bici_acid")
                   ,id.vars = c("AGE")) %>% 
   #.[,variable_f := factor(variable,levels = c("N_acid_walk","N_acid_bici")

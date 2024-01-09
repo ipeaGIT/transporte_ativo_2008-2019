@@ -188,6 +188,7 @@ dt_merge <- rbind(
 )
 
 # readr::write_rds(dt_merge,"data/datasus/deaths_cor_age_sexo.rds")
+dt_merge <- readr::read_rds("data/datasus/deaths_cor_age_sexo.rds")
 
 # compare data
 dt_merge[,sum(num_acid),by = .(year)]
@@ -198,11 +199,11 @@ dt_merge <- dt_merge[,list(total_acid = sum(num_acid,na.rm = TRUE))
                      ,by = .(code_muni_sus
                              ,causa_name,year
                              ,sexo,cor,AGE)]
-dt_merge$causa_name %>% table(useNA = "always")
-dt_merge$year %>% table(useNA = "always")
-dt_merge$cor %>% table(useNA = "always")
-dt_merge$sexo %>% table(useNA = "always")
-dt_merge$AGE %>% table(useNA = "always")
+prop.table(table(dt_merge$causa_name ,useNA = "always"))*100
+prop.table(table(dt_merge$year ,useNA = "always"))*100
+prop.table(table(dt_merge$cor ,useNA = "always"))*100
+prop.table(table(dt_merge$sexo ,useNA = "always"))*100
+prop.table(table(dt_merge$AGE ,useNA = "always"))*100
 
 
 # 3) Read censo 2010 ---- 
@@ -274,7 +275,7 @@ ibge_2010[,sum(pop)]                  # 190755723
 
 # 4) Read Pop 2013 - 2019 & Metro Name -----
 
-dt_pop <- readr::read_rds("data-raw/sidrar/pop_2013_to_2019.rds")
+dt_pop <- readr::read_rds("data-raw/sidrar/pop_2011_to_2021.rds")
 ## Pop w/ metro info ------
 dt_metro <- geobr::read_metro_area()
 setDT(dt_metro)
@@ -316,7 +317,7 @@ dados_acid$sexo %>% table(useNA = "always")
 dados_acid$cor %>% table(useNA = "always")
 dados_acid$AGE %>% table(useNA = "always")
 
-## . w/ RM pop 2013-2019 ----
+## . w/ RM pop 2011-2021 ----
 
 tmp_pop_rm <- copy(tmp_dt_acid)[,.SD[1],by = .(name_metro, municipio_codigo,year)]
 tmp_pop_rm <- tmp_pop_rm[,list(pop = sum(valor)),by = .(name_metro,year)]

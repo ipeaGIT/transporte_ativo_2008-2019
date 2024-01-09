@@ -69,7 +69,7 @@ ggplot(dt)+
   labs(x = "Ano",y = "Obitos a cada 100 mil hab."
        ,color = "Faixa etária"
        ,title = "Óbitos por modo de transporte"
-       ,caption = "Média das RM da PNS de 2019.\nFonte: DataSUS (2016 - 2019).")+
+       ,caption = "Média das RM da PNS de 2019.\nFonte: DATASUS.")+
   theme_minimal()+
   theme(legend.position = "right",
         legend.key.width=unit(2,"line"),
@@ -141,7 +141,7 @@ ggplot(dt)+
   labs(x = "Ano",y = "Obitos a cada 100 mil hab."
        ,color = "Faixa etária"
        ,title = "Óbitos por modo de transporte"
-       ,caption = "Média das RM da PNS de 2019. \nFonte: DataSus")+
+       ,caption = "Média das RM da PNS de 2019. \nFonte: DATASUS.")+
   theme_minimal()+
   theme(legend.position = "bottom",
         legend.key.width=unit(2,"line"),
@@ -155,16 +155,93 @@ ggplot(dt)+
         title = element_text(size = 10
                              , family = "Times New Roman"
                              , face = "plain"),
-        plot.margin=unit(c(0,2,0,1),"mm"),
+        plot.margin=unit(c(2,2,0,1),"mm"),
         strip.text.x = element_text(size=rel(1.2)),
         panel.grid.major.y = element_line(colour = "grey92"),
         panel.background = element_rect(fill = "white",colour = NA))
 
 
-ggsave("figures/datasus/obito_transporte.jpg"
+ggsave("figures/datasus/obito_transporte_age.jpg"
        ,width = 17.5,height = 15,units = "cm"
        ,dpi = 300,scale = 1.2)
+## 1.21) Ob. / 100k by mode -----
+rm(list=ls())
+gc(reset = TRUE)
+dados_acid <- readr::read_rds("data/datasus/metro_by_mode_age_cor_sexo.rds")
+dados_acid <- dados_acid[!is.na(prop)]
+dados_acid[,pop := pop * prop]
 
+# filtra soh RMs da PNS
+dados_acid[,name_metro := gsub("RM ","",name_metro)]
+dados_acid[name_metro %like% "Distrito Federal"
+           ,name_metro := "Distrito Federal"]
+rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
+            "Rio de Janeiro","São Paulo","Curitiba","Porto Alegre","Distrito Federal")
+
+dados_acid <- dados_acid[name_metro %in% rm_pns,]
+
+unique(dados_acid$causa_name)
+# soma
+dados_acid_all <- dados_acid[,list(
+  "deaths" = sum(deaths,na.rm = TRUE),
+  "pop" = sum(pop,na.rm = TRUE)
+),by = .(causa_name,year)]
+
+dados_acid_all[,rel_100k := round(deaths / (pop / 1000000),2)]
+
+# checking 
+dados_acid_all$causa_name %>% table(useNA = "always")
+dados_acid_all$year %>% table(useNA = "always")
+dados_acid_all$sexo %>% table(useNA = "always")
+dados_acid_all$AGE %>% table(useNA = "always")
+
+# filter 
+dt <- dados_acid_all[causa_name %in% c("walk","bike","total"
+                                         ,"moto","auto"),]
+dt[,causa_name_f := factor(causa_name
+                           ,levels = 
+                             c("auto","moto","bike","walk"
+                               ,"total")
+                           ,labels = c("Automóvel","Motocicleta",
+                                       "Bicicleta","A pé","Total"))]
+dt[,year_f := as.factor(gsub("^20","",year))]
+
+ggplot(dt)+
+  geom_point(aes(x = year_f
+                 ,y = deaths,color = causa_name_f
+                 ,group = causa_name_f),size = 1.0)+
+  geom_line(aes(x = year_f,color = causa_name_f,
+                ,y = deaths,group = causa_name_f)
+            ,linewidth = 0.85)+
+  #scale_color_brewer(palette = "Greens")+
+  facet_wrap(vars(causa_name_f),scales = "free_y")+
+  labs(x = "Ano",#y = "Obitos a cada 100 mil hab."
+       y = "Óbitos totais"
+       ,color = "Faixa etária"
+       ,title = "Óbitos por modo de transporte"
+       ,caption = "Total das RM da PNS de 2019. \nFonte: DATASUS.")+
+  theme_minimal()+
+  theme(legend.position = "none",
+        legend.key.width=unit(2,"line"),
+        text = element_text(family = "Times New Roman"),
+        legend.text = element_text(size = rel(0.8)
+                                   , family = "Times New Roman"
+                                   , face = "plain"),
+        legend.title = element_text(size = rel(0.95)
+                                    , family = "Times New Roman"
+                                    , face = "bold"),
+        title = element_text(size = 10
+                             , family = "Times New Roman"
+                             , face = "plain"),
+        plot.margin=unit(c(2,2,0,1),"mm"),
+        strip.text.x = element_text(size=rel(1.2)),
+        panel.grid.major.y = element_line(colour = "grey92"),
+        panel.background = element_rect(fill = "white",colour = NA))
+
+
+ggsave("figures/datasus/obito_transporte_total.jpg"
+       ,width = 17.5,height = 10,units = "cm"
+       ,dpi = 300,scale = 1.2)
 ## 1.3) Ob. totais by age & mode -----------
 rm(list=ls())
 gc(reset = TRUE)
@@ -212,7 +289,7 @@ ggplot(dt)+
   labs(x = "Ano",y = "Obitos totais"
        ,fill = "Faixa etária"
        ,title = "Óbitos por modo de transporte"
-       ,caption = "Soma das RM da PNS de 2019. \nFonte: DataSus")+
+       ,caption = "Soma das RM da PNS de 2019. \nFonte: DATASUS.")+
   theme_minimal()+
   theme(legend.position = "bottom",
         legend.key.width=unit(2,"line"),
@@ -226,7 +303,7 @@ ggplot(dt)+
         title = element_text(size = 10
                              , family = "Times New Roman"
                              , face = "plain"),
-        plot.margin=unit(c(0,2,0,1),"mm"),
+        plot.margin=unit(c(2,2,0,1),"mm"),
         strip.text.x = element_text(size=rel(1.2)),
         panel.grid.major.y = element_line(colour = "grey92"),
         panel.background = element_rect(fill = "white",colour = NA))
@@ -244,11 +321,11 @@ ggplot(dt)+
             ,color = "black",position = "fill")+
   scale_y_continuous(labels = scales::percent)+
   scale_fill_brewer(palette = "Greens")+
-  facet_wrap(vars(causa_name_f),scales = "free_y")+
+  facet_wrap(vars(causa_name_f),scales = "fixed")+
   labs(x = "Ano",y = "Proporção de óbitos totais (%)"
        ,fill = "Faixa etária"
        ,title = "Óbitos por modo de transporte"
-       ,caption = "Soma das RM da PNS de 2019. \nFonte: DataSus")+
+       ,caption = "Soma das RM da PNS de 2019. \nFonte: DATASUS.")+
   theme_minimal()+
   theme(legend.position = "bottom",
         legend.key.width=unit(2,"line"),
@@ -310,7 +387,7 @@ dt[,causa_name_f := factor(causa_name
 dt[,year_f := as.factor(gsub("^20","",year))]
 
 
-ggplot(dt[causa_name != "total"])+
+ggplot(dt[causa_name %in% c("walk","bike")])+
   geom_area(aes(x = year_f,group = causa_name_f
                 ,y = deaths,fill = causa_name_f),
             linewidth = 0.25
@@ -320,7 +397,7 @@ ggplot(dt[causa_name != "total"])+
   labs(x = "Ano",y = "Obitos totais"
        ,fill = "Modo transporte"
        ,title = "Óbitos por faixa etária"
-       ,caption = "Soma das RM da PNS de 2019. \nFonte: DataSus")+
+       ,caption = "Soma das RM da PNS de 2019. \nFonte: DATASUS.")+
   theme_minimal()+
   theme(legend.position = "bottom",
         legend.key.width=unit(2,"line"),
@@ -334,14 +411,14 @@ ggplot(dt[causa_name != "total"])+
         title = element_text(size = 10
                              , family = "Times New Roman"
                              , face = "plain"),
-        plot.margin=unit(c(0,2,0,1),"mm"),
+        plot.margin=unit(c(2,2,0,1),"mm"),
         strip.text.x = element_text(size=rel(1.2)),
         panel.grid.major.y = element_line(colour = "grey92"),
         panel.background = element_rect(fill = "white",colour = NA))
 
 
-ggsave("figures/datasus/obito_totais_idade.jpg"
-       ,width = 15,height = 15,units = "cm"
+ggsave("figures/datasus/obito_totais_idade_ativ.jpg"
+       ,width = 15,height = 12,units = "cm"
        ,dpi = 300,scale = 1.2)
 ### Proportion ----
 ggplot(dt[causa_name != "total"])+
@@ -356,7 +433,7 @@ ggplot(dt[causa_name != "total"])+
   labs(x = "Ano",y = "Proporção de óbitos (%)"
        ,fill = "Modo transporte"
        ,title = "Óbitos por faixa etária"
-       ,caption = "Soma das RM da PNS de 2019. \nFonte: DataSus")+
+       ,caption = "Soma das RM da PNS de 2019. \nFonte: DATASUS.")+
   theme_minimal()+
   theme(legend.position = "bottom",
         legend.key.width=unit(2,"line"),
@@ -370,13 +447,13 @@ ggplot(dt[causa_name != "total"])+
         title = element_text(size = 10
                              , family = "Times New Roman"
                              , face = "plain"),
-        plot.margin=unit(c(0,2,0,1),"mm"),
+        plot.margin=unit(c(2,2,0,1),"mm"),
         strip.text.x = element_text(size=rel(1.2)),
         panel.grid.major.y = element_line(colour = "grey92"),
         panel.background = element_rect(fill = "white",colour = NA))
 
 ggsave("figures/datasus/obito_totais_idade_proportion.jpg"
-       ,width = 15,height = 15,units = "cm"
+       ,width = 15,height = 12,units = "cm"
        ,dpi = 300,scale = 1.2)
 
 ## 1.5) Ob. totais by facet(year) -----------
@@ -430,7 +507,7 @@ ggplot(dt[causa_name != "total"])+
   labs(x = "Idade",y = "Obitos totais"
        ,fill = "Modo transporte"
        ,title = "Óbitos por ano"
-       ,caption = "Soma das RM da PNS de 2019. \nFonte: DataSus")+
+       ,caption = "Soma das RM da PNS de 2019. \nFonte: DATASUS.")+
   theme_minimal()+
   theme(legend.position = "bottom",
         legend.key.width=unit(2,"line"),
@@ -560,7 +637,7 @@ pf <- p_plot("Homens","none"
              ,my_caption = NULL
              ,y = "Obitos Totais") +
   p_plot("Mulheres","bottom"
-         ,my_caption ="Soma das RM da PNS de 2019. \nFonte: DataSus"
+         ,my_caption ="Soma das RM da PNS de 2019. \nFonte: DATASUS."
          ,y = NULL)
 
 pf
@@ -576,7 +653,7 @@ pf <- p_plot("Homens","none",position = "fill"
              ,my_caption = NULL
              ,y = "Obitos Totais") +
   p_plot("Mulheres","bottom",position = "fill"
-         ,my_caption ="Soma das RM da PNS de 2019. \nFonte: DataSus"
+         ,my_caption ="Soma das RM da PNS de 2019. \nFonte: DATASUS."
          ,y = NULL)
 
 pf
@@ -627,7 +704,7 @@ ggplot(dt)+
   labs(x = "Ano",y = "Obitos totais"
        ,fill = "Modo transporte"
        ,title = "Óbitos conforme sexo e raça"
-       ,caption = "Soma das RM da PNS de 2013-2019. \nFonte: DataSus")+
+       ,caption = "Soma das RM da PNS de 2011-2021. \nFonte: DATASUS.")+
   theme_minimal()+
   theme(legend.position = "bottom",
         legend.key.width=unit(2,"line"),
@@ -641,11 +718,11 @@ ggplot(dt)+
         title = element_text(size = 10
                              , family = "Times New Roman"
                              , face = "plain"),
-        plot.margin=unit(c(0,2,0,1),"mm"),
+        plot.margin=unit(c(2,2,0,1),"mm"),
         strip.text.x = element_text(size=rel(1.2)),
         panel.grid.major.y = element_line(colour = "grey92"),
         panel.background = element_rect(fill = "white",colour = NA),
-        axis.text.x = element_text(angle = 45
+        axis.text.x = element_text(angle = 0
                                    ,hjust = 0.75
                                    ,vjust = 0.75))
 
@@ -667,7 +744,7 @@ ggplot(dt)+
   labs(x = "Ano",y = "Obitos totais"
        ,fill = "Modo transporte"
        ,title = "Óbitos conforme sexo e raça"
-       ,caption = "Soma das RM da PNS de 2013-2019. \nFonte: DataSus")+
+       ,caption = "Soma das RM da PNS de 2011-2021. \nFonte: DATASUS.")+
   theme_minimal()+
   theme(legend.position = "bottom"
         ,panel.grid.major.x =  element_blank()
@@ -679,7 +756,7 @@ ggplot(dt)+
         legend.text = element_text(size = rel(0.8), face = "plain"),
         legend.title = element_text(size = rel(0.95), face = "bold"),
         title = element_text(size = 10, face = "plain"),
-        plot.margin=unit(c(0,2,0,1),"mm"),
+        plot.margin=unit(c(2,2,0,1),"mm"),
         strip.text.x = element_text(size=rel(1.2)),
         panel.background = element_rect(fill = "white",colour = NA))
 
@@ -722,25 +799,27 @@ dt <- dados_acid_all[(causa_name %in% c("walk","bike")) &
 dt[,year_f := as.factor(gsub("^20","",year))]
 
 ggplot(dt)+
-  geom_col(aes(x = year_f,group = causa_name_f
-               ,y = deaths,fill = causa_name_f),
-           linewidth = 0.25
-           ,color = "black",position =  "identity")+
+  geom_line(aes(x = year_f,group = causa_name_f
+               ,y = deaths,color = causa_name_f),
+           linewidth = 1
+           #,color = "black"#,position =  "identity"
+           )+
   geom_text(aes(x = year_f
                 ,y = fcase(causa_name_f == "A pé" & sexo == "Homens"  , 1.05*deaths,
                            causa_name_f == "A pé" & sexo == "Mulheres", 1.20*deaths,
                            causa_name_f == "Bicicleta" & sexo == "Homens"  , 1.05*deaths,
                            causa_name_f == "Bicicleta" & sexo == "Mulheres" & year_f == "2015", 3*deaths,
                            causa_name_f == "Bicicleta" & sexo == "Mulheres", 1.50*deaths)
-                ,label = deaths),size = 3)+
-  scale_fill_brewer(palette = "Blues")+
+                ,label = deaths),size = 3
+            ,family = "Times New Roman")+
+  scale_color_brewer(palette = "Blues")+
   ggh4x::facet_grid2(rows = vars(causa_name_f)
                      ,cols = vars(sexo)
                      ,scales = "free")+
   labs(x = "Ano",y = "Obitos totais"
-       ,fill = "Modo transporte"
+       ,color = "Modo transporte"
        ,title = "Óbitos conforme sexo"
-       ,caption = "Soma das RM da PNS de 2013-2019. \nFonte: DataSus")+
+       ,caption = "Soma das RM da PNS de 2011-2021. \nFonte: DATASUS.")+
   theme_minimal()+
   theme(legend.position = "bottom",
         legend.key.width=unit(2,"line"),
@@ -754,8 +833,8 @@ ggplot(dt)+
         title = element_text(size = 10
                              , family = "Times New Roman"
                              , face = "plain"),
-        plot.margin=unit(c(0,2,0,1),"mm"),
-        strip.text.x = element_text(size=rel(1.2)),
+        plot.margin=unit(c(2,2,0,1),"mm"),
+        strip.text.x = element_text(size=rel(1.2), family = "Times New Roman"),
         panel.grid.major.y = element_line(colour = "grey92"),
         panel.background = element_rect(fill = "white",colour = NA))
 
@@ -776,7 +855,7 @@ ggplot(dt)+
   labs(x = "Ano",y = "Percentual (%)"
        ,fill = "Modo transporte"
        ,title = "Óbitos conforme sexo"
-       ,caption = "Soma das RM da PNS de 2013-2019. \nFonte: DataSus")+
+       ,caption = "Soma das RM da PNS de 2011-2021. \nFonte: DATASUS.")+
   theme_minimal()+
   theme(legend.position = "bottom",
         legend.key.width=unit(2,"line"),
@@ -790,13 +869,13 @@ ggplot(dt)+
         title = element_text(size = 10
                              , family = "Times New Roman"
                              , face = "plain"),
-        plot.margin=unit(c(0,2,0,1),"mm"),
+        plot.margin=unit(c(2,2,0,1),"mm"),
         strip.text.x = element_text(size=rel(1.2)),
         panel.grid.major.y = element_line(colour = "grey92"),
         panel.background = element_rect(fill = "white",colour = NA))
 
 ggsave("figures/datasus/activ_ano_proportion.jpg"
-       ,width = 15,height = 12,units = "cm"
+       ,width = 15,height = 9,units = "cm"
        ,dpi = 300,scale = 1.2)
 ## 2.2) Ob. totais by race & gender -----------
 rm(list=ls())
@@ -841,7 +920,7 @@ ggplot(dt[causa_name %in% c("walk","bike")])+
   labs(x = "Ano",y = "Obitos totais"
        ,fill = "Modo transporte"
        ,title = "Óbitos conforme sexo e raça"
-       ,caption = "Soma das RM da PNS de 2013-2019. \nFonte: DataSus")+
+       ,caption = "Soma das RM da PNS de 2011-2021. \nFonte: DATASUS.")+
   theme_minimal()+
   theme(legend.position = "bottom",
         legend.key.width=unit(2,"line"),
@@ -855,7 +934,7 @@ ggplot(dt[causa_name %in% c("walk","bike")])+
         title = element_text(size = 10
                              , family = "Times New Roman"
                              , face = "plain"),
-        plot.margin=unit(c(0,2,0,1),"mm"),
+        plot.margin=unit(c(2,2,0,1),"mm"),
         strip.text.x = element_text(size=rel(1.2)),
         panel.grid.major.y = element_line(colour = "grey92"),
         panel.background = element_rect(fill = "white",colour = NA))
@@ -878,7 +957,7 @@ ggplot(dt[causa_name %in% c("walk","bike")])+
   labs(x = "Ano",y = "Obitos totais"
        ,fill = "Modo transporte"
        ,title = "Óbitos conforme sexo e raça"
-       ,caption = "Soma das RM da PNS de 2013-2019. \nFonte: DataSus")+
+       ,caption = "Soma das RM da PNS de 2011-2021. \nFonte: DATASUS.")+
   theme_minimal()+
   theme(legend.position = "bottom",
         legend.key.width=unit(2,"line"),
@@ -892,7 +971,7 @@ ggplot(dt[causa_name %in% c("walk","bike")])+
         title = element_text(size = 10
                              , family = "Times New Roman"
                              , face = "plain"),
-        plot.margin=unit(c(0,2,0,1),"mm"),
+        plot.margin=unit(c(2,2,0,1),"mm"),
         strip.text.x = element_text(size=rel(1.2)),
         panel.grid.major.y = element_line(colour = "grey92"),
         panel.background = element_rect(fill = "white",colour = NA))
