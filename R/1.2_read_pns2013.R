@@ -12,32 +12,33 @@ library(magrittr)
 
 # Read the .txt file
 
-load("data-raw/pns2013.rdata")
-setDT(pns2013)
-#pns2013 <- readr::read_rds("../../data-raw/PNS/2013/pns2013.rds")
-#data.table::setDT(pns2013)
+pns2013 <- readr::read_rds("../../data-raw/PNS/2013/pns2013.rds")
+data.table::setDT(pns2013)
+gc()
 #
 ## Add
 ## Le c("V0029", "V00291", "V00292", "V00293", "V0030", "V00301", 
 ##    "V00302", "V00303")
 #
-#extra_2013 <- PNSIBGE::read_pns(
-#  microdata = "../../data-raw/PNS/2013/pns_2013_20200825/PNS_2013.txt"
-#  ,input_txt = "../../data-raw/PNS/2013/input_PNS_2013.sas"
-#  ,vars = c("V0006_PNS","V0029", "V00291"
-#            , "V00292", "V00293","C008","P040","VDD004A")
-#)
-#data.table::setDT(extra_2013)
-#
-#pns2013 <- pns2013[
-#  extra_2013
-#  , on = c("C00301","ID_DOMICILIO") 
-#  , ":="(V0029 = i.V0029     # Peso do morador selecionado sem calibração
-#         ,V00291 = i.V00291  # Peso do morador selecionado com calibração
-#         ,V00292 = i.V00292 # Projeção da população para moradores selecionados
-#         ,V00293 = i.V00293) # Domínio de projeção para morador selecionado
-#]
-#
+extra_2013 <- PNSIBGE::read_pns(
+ microdata = "../../data-raw/PNS/2013/pns_2013_20200825/PNS_2013.txt"
+ ,input_txt = "../../data-raw/PNS/2013/input_PNS_2013.sas"
+ ,vars = c("V0006_PNS","V0029", "V00291"
+           , "V00292", "V00293","C008","P040","VDD004A")
+)
+data.table::setDT(extra_2013)
+
+gc()
+
+pns2013 <- pns2013[
+ extra_2013
+ , on = c("C00301","ID_DOMICILIO")
+ , ":="(V0029 = i.V0029     # Peso do morador selecionado sem calibração
+        ,V00291 = i.V00291  # Peso do morador selecionado com calibração
+        ,V00292 = i.V00292 # Projeção da população para moradores selecionados
+        ,V00293 = i.V00293) # Domínio de projeção para morador selecionado
+]
+
 #pns2013_dt[ID_DOMICILIO == 11000020001,] %>% View()
 #extra_2013[ID_DOMICILIO == 11000020001,]
 #extra_2013[ID_DOMICILIO == 11000020002,]
@@ -48,7 +49,7 @@ setDT(pns2013)
 #extra_2013[M001  == 1,]$V0029 %>% as.numeric() %>% summary()
 #extra_2013[is.na(M001) & !is.na(P040),]
 #
-#rm(extra_2013)
+rm(extra_2013)
 
 ## Definição do peso e filtragem de respondentes do questionario ----
 # Selecionando registros válidos para o módulo P e calculando peso amostral 
@@ -59,6 +60,7 @@ setDT(pns2013)
 soma_v00291 <- sum(as.numeric(pns2013[M001 == "1"]$V00291),na.rm = TRUE) # 145572210
 nobs_pns2013 <- nrow(pns2013[M001 == "1"]) # 60202
 
+# 
 pns2013[,peso_morador_selec := (V00291* nobs_pns2013) / soma_v00291 ]
 
 summary(pns2013$peso_morador_selec)
@@ -148,6 +150,22 @@ pns2013[C008 >=65,  AGE :="65+"]
 
 table(pns2013$AGE,exclude = FALSE)  
 
+
+# Create age groups with bigger age interval
+pns2013[C008>=0 & C008<18, AGE2 :="0-17"]
+pns2013[C008>=18 & C008<30, AGE2 :="18-29"]
+pns2013[C008>=30 & C008<40, AGE2 :="30-39"]
+pns2013[C008>=40 & C008<50, AGE2 :="40-49"]
+pns2013[C008>=50 & C008<60, AGE2 :="50-59"]
+pns2013[C008>=60,  AGE2 :="60+"]
+table(pns2013$AGE2)
+
+# Create age groups with bigger age interval
+pns2013[C008>=0 & C008<18, AGE3 :="0-17"]
+pns2013[C008>=18 & C008<35, AGE3 :="18-34"]
+pns2013[C008>=35 & C008<55, AGE3 :="35-54"]
+pns2013[C008>=55,  AGE3 :="55+"]
+table(pns2013$AGE3)
 
 # Create BMI  - Body Max Index (weight / height)
 # P00101	P1	Se sim, qual o peso (kg)?

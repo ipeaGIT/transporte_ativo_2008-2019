@@ -253,6 +253,22 @@ pnad2008[v8005>54 & v8005<65, AGE :="55-64"]
 pnad2008[v8005>64,  AGE :="65+"]
 table(pnad2008$AGE)
 
+# Create age groups with bigger age interval
+pnad2008[v8005>=0 & v8005<18, AGE2 :="0-17"]
+pnad2008[v8005>=18 & v8005<30, AGE2 :="18-29"]
+pnad2008[v8005>=30 & v8005<40, AGE2 :="30-39"]
+pnad2008[v8005>=40 & v8005<50, AGE2 :="40-49"]
+pnad2008[v8005>=50 & v8005<60, AGE2 :="50-59"]
+pnad2008[v8005>=60,  AGE2 :="60+"]
+table(pnad2008$AGE2)
+
+# Create age groups with bigger age interval
+pnad2008[v8005>=0 & v8005<18, AGE3 :="0-17"]
+pnad2008[v8005>=18 & v8005<35, AGE3 :="18-34"]
+pnad2008[v8005>=35 & v8005<55, AGE3 :="35-54"]
+pnad2008[v8005>=55,  AGE3 :="55+"]
+table(pnad2008$AGE3)
+
 # Create dummyvehicle
 unique(pnad2008$v2032)
 pnad2008[, v2032 := as.integer(v2032)]

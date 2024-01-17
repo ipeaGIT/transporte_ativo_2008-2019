@@ -13,7 +13,7 @@ library(patchwork)
 # read files
 rm(list=ls())
 data_path <- "../../data/transporte_ativo_2008-2019/"
-data_path <- "data/"
+#data_path <- "data/"
 pnad2008_br <- readr::read_rds(paste0(data_path,"export_pnad08/br_quint.rds"))
 pns13_br <- readr::read_rds(paste0(data_path,"export_pns13/br_quint.rds"))
 pns19_br <- readr::read_rds(paste0(data_path,"export_pns19/br_quint.rds"))
@@ -541,7 +541,7 @@ ggsave(filename = "figures/prop_idade_sexo.jpg"
 # read files
 rm(list=ls())
 data_path <- "../../data/transporte_ativo_2008-2019/"
-data_path <- "data/"
+#data_path <- "data/"
 gc(reset=TRUE)
 pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/sexo_ageLarge.rds"))
 pns13 <- readr::read_rds(paste0(data_path,"export_pns13/sexo_ageLarge.rds"))

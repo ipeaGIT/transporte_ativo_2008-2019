@@ -6,35 +6,35 @@ library(magrittr)
 
 # Read the .txt file
 
-load("data-raw/pns2019.RData")
-data.table::setDT(pns2019)
 
-pns2019_rds <- readr::read_rds("../../data-raw/PNS/2019/pns2019.rds")
-data.table::setDT(pns2019_rds)
+pns2019 <- readr::read_rds("../../data-raw/PNS/2019/pns2019.rds")
+data.table::setDT(pns2019)
 
 # Add
 # Le c("V0029", "V00291", "V00292", "V00293", "V0030", "V00301", 
 #    "V00302", "V00303")
 
-# extra_2019 <- PNSIBGE::read_pns(
-#   microdata  = "L:/Proj_acess_oport/data-raw/PNS/2019/pns_2019_20220525/PNS_2019.txt"
-#   ,input_txt = "L:/Proj_acess_oport/data-raw/PNS/2019/input_PNS_2019.sas"
-#   #,vars = c("V0006_PNS","V0029", "V00291"
-#   #          , "V00292", "V00293"
-#             )
-# )
-# data.table::setDT(extra_2019)
-# 
-# pns2019 <- pns2019[
-#   extra_2019
-#   , on = c("C00301","ID_DOMICILIO") 
-#   , ":="(V0029 = i.V0029     # Peso do morador selecionado sem calibracao
-#          ,V00291 = i.V00291  # Peso do morador selecionado com calibracao
-#          ,V00292 = i.V00292  # Projeção da população para moradores selecionados
-#          ,V00293 = i.V00293) # Domínio de projeção para morador selecionado
-# ]
-# 
+extra_2019 <- PNSIBGE::read_pns(
+  microdata  = "L:/Proj_acess_oport/data-raw/PNS/2019/pns_2019_20220525/PNS_2019.txt"
+  ,input_txt = "L:/Proj_acess_oport/data-raw/PNS/2019/input_PNS_2019.sas"
+  #,vars = c("V0006_PNS","V0029", "V00291"
+  #          , "V00292", "V00293"
+            )
+
+data.table::setDT(extra_2019)
+gc()
+
+pns2019 <- pns2019[
+  extra_2019
+  , on = c("C00301","ID_DOMICILIO")
+  , ":="(V0029 = i.V0029     # Peso do morador selecionado sem calibracao
+         ,V00291 = i.V00291  # Peso do morador selecionado com calibracao
+         ,V00292 = i.V00292  # Projeção da população para moradores selecionados
+         ,V00293 = i.V00293) # Domínio de projeção para morador selecionado
+]
+
 # clean memory
+rm(extra_2019)
 gc(reset = T)
 
 ## Definição do peso e filtragem de respondentes do questionario ----
@@ -66,6 +66,8 @@ pns2019[,peso_morador_selec := (V00291 * nobs_pns2019) / soma_v00291 ]
 
 
 summary(pns2019$peso_morador_selec)
+
+
 # 4 RENAME variables=====
 ## 4.0 Socioeconomic  ----------------
 
@@ -124,6 +126,24 @@ pns2019[C008 >=55 & C008<65, AGE :="55-64"]
 pns2019[C008 >=65,  AGE :="65+"]
 
 table(pns2019$AGE,exclude = FALSE)  
+
+
+# Create age groups with bigger age interval
+pns2019[C008>=0 & C008<18, AGE2 :="0-17"]
+pns2019[C008>=18 & C008<30, AGE2 :="18-29"]
+pns2019[C008>=30 & C008<40, AGE2 :="30-39"]
+pns2019[C008>=40 & C008<50, AGE2 :="40-49"]
+pns2019[C008>=50 & C008<60, AGE2 :="50-59"]
+pns2019[C008>=60,  AGE2 :="60+"]
+table(pns2019$AGE2)
+
+# Create age groups with bigger age interval
+pns2019[C008>=0 & C008<18, AGE3 :="0-17"]
+pns2019[C008>=18 & C008<35, AGE3 :="18-34"]
+pns2019[C008>=35 & C008<55, AGE3 :="35-54"]
+pns2019[C008>=55,  AGE3 :="55+"]
+table(pns2019$AGE3)
+
 
 # Create BMI  - Body Max Index (weight / height)
 # P00104	P1	Se sim, qual o peso (kg)?
