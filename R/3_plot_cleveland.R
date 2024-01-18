@@ -5,6 +5,7 @@ library(readr)
 library(data.table)
 library(magrittr)
 library(patchwork)
+library(ipeaplot) # remotes::install_github("ipeadata-lab/ipeaplot")
 
 
 
@@ -536,16 +537,20 @@ ggsave(filename = "figures/prop_idade_sexo.jpg"
        ,scale = 1.2
        ,units = "cm"
        ,dpi = 300)
+
+
+
+
 # 3) prop ~ sexo + ageLarge ----------
 
 # read files
 rm(list=ls())
 data_path <- "../../data/transporte_ativo_2008-2019/"
-#data_path <- "data/"
+
 gc(reset=TRUE)
-pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/sexo_ageLarge.rds"))
-pns13 <- readr::read_rds(paste0(data_path,"export_pns13/sexo_ageLarge.rds"))
-pns19 <- readr::read_rds(paste0(data_path,"export_pns19/sexo_ageLarge.rds"))
+pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/sexo_ageLarge3.rds"))
+pns13 <- readr::read_rds(paste0(data_path,"export_pns13/sexo_ageLarge3.rds"))
+pns19 <- readr::read_rds(paste0(data_path,"export_pns19/sexo_ageLarge3.rds"))
 
 # set DT
 pnad2008 <- pnad2008$sexo_age
@@ -577,8 +582,16 @@ single_dt2 <- list(
 
 
 # fix factors
-vec_label <- c("18-24", "25-34", "35-44"
-               , "45-54", "55-64", "65+")
+# vec_label <- c("18-29",
+#                 "30-39",
+#                 "40-49",
+#                 "50-59",
+#                  "60+")
+
+vec_label <- c("18-34",
+               "35-54",
+               "40-49",
+               "55+")
 
 single_dt2[
   ,agegroup_f := factor(
@@ -601,163 +614,67 @@ single_dt2[
   )]
 
 # text 
-single_dt2[agegroup_f == "65+"]
-single_dt2[agegroup_f == "65+" & sexo == "Masculino"]
-single_dt2[agegroup_f == "Masculino" & ano == "2019"]
+single_dt2[agegroup_f == "60+"]
+single_dt2[agegroup_f == "55+" & sexo == "Masculino"]
+single_dt2[sexo == "Masculino" & ano_f == "2019"]
+
+
 
 ##  plot v1 ----
+
 ggplot(data = single_dt2
        ,aes(
-         x = agegroup_f
-         , y = mean
-         , group = ano_f
+         y = mean
+         , x =  ano_f
+         # , group = agegroup_f
        )) + 
   geom_path(aes(
-    y = mean
-    , color = ano_f
-    , group = ano_f
+    x = ano_f
+    , color = agegroup_f
+    , group = agegroup_f
   )
-  ,position = position_dodge(width = 0)) +
+  ,position = position_dodge(width = .1)
+  ) +
+  facet_wrap(facets = ~sexo_f ,ncol = 2) +
   geom_pointrange(
     aes(
       ymin = ci_l
       , ymax = ci_u
-      , color = ano_f
-      , fill = ano_f
-      , group = ano_f
+      , color = agegroup_f
+      , fill = agegroup_f
+      , group = agegroup_f
     )
-    ,position = position_dodge(width = 0)
-    #, width = .75
-    ,shape = 21
-  ) +
-  geom_ribbon(
-    aes(
-      ymin = ci_l
-      , ymax = ci_u
-      , group = ano_f
-      , fill = ano_f
-    )
-    ,alpha = 0.10
-    ,position = position_dodge(width = 0.0)) +
+    ,position = position_dodge(width = .1)
+    ,shape = 21) +
   scale_y_continuous(labels = scales::percent
-                     ,breaks = seq(0,0.35,0.05))+
-  facet_wrap(facets = ~sexo_f
-             ,nrow = 2)+
-  #viridis::scale_color_viridis(discrete = TRUE
-  #                             ,option = "D"
-  #                             ,direction = -1
-  #                             ,guide = "none")+
-  #viridis::scale_fill_viridis(discrete = TRUE
-  #                            ,option = "D"
-  #                            ,direction = -1)+
-  scale_color_manual(values = c(
-    '#620C1A'
-    ,'#111F4F'
-    ,'#C29365'
-    ,'#6A9BB3'
-  ))+
-  scale_fill_manual(values = c(
-    '#620C1A'
-    ,'#111F4F'
-    ,'#C29365'
-    ,'#6A9BB3'
-  ))+
+                     , limits = c(0, .32)
+                     , breaks = seq(0,0.35,0.05)) +
   labs(
-    #title = 'Proporção das pessoas que se deslocam a pé ou de bicicleta'
-    #, subtitle = "Pessoas acima de 18 anos conforme sexo e idade"
     title = NULL, subtitle = NULL
-    , x = "Faixa etária", y = "Proporção (%)"
-    , fill = "Ano"
+    , x = "Ano", y = "Proporção (%)"
+    , fill = "Faixa etária"
+    , color = "Faixa etária"
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
-  )+
-  guides(color = "none")+
-  theme_minimal()+  
-  theme(legend.position = "bottom",
-        legend.key.width=unit(2,"line"),
-        text = element_text(family = "Times New Roman"),
-        legend.text = element_text(size = rel(0.8)
-                                   , family = "Times New Roman"
-                                   , face = "plain"),
-        legend.title = element_text(size = rel(0.95)
-                                    , family = "Times New Roman"
-                                    , face = "bold"),
-        title = element_text(size = 10
-                             , family = "Times New Roman"
-                             , face = "plain"),
-        plot.margin=unit(c(0,2,0,1),"mm"),
-        strip.text.x = element_text(size=rel(1.2)),
-        panel.grid.major.y = element_line(colour = "grey92"),
-        panel.background = element_rect(fill = "white",colour = NA))
+  ) +
+  # theme_bw(base_size = 18)
+  ipeaplot::scale_color_ipea(palette = 'Green') +
+  ipeaplot::scale_fill_ipea(palette = 'Green') +
+  ipeaplot::theme_ipea(legend.position = 'bottom') 
 
-ggsave(filename = "figures/prop_idade_sexo_v2.jpg"
+showtext_auto()
+showtext_opts(dpi = 300)
+
+ggsave(filename = "figures/prop_idade_sexo_v2.png"
        ,width = 15
        ,height = 12
        ,scale = 1.2
        ,units = "cm"
        ,dpi = 300)
 
-## plot v2----
 
-ggplot(data = single_dt2
-       ,aes(
-         group = agegroup_f
-         , y = mean
-         , x = ano_f
-       )) + 
-  geom_path(aes(
-    y = mean
-    , color = agegroup_f
-    , group = agegroup_f
-  )
-  ,position = position_dodge(width = 0)
-  ,size = 1.0) +
-  geom_point(aes(
-    y = mean
-    , color = agegroup_f
-    , group = agegroup_f
-  )
-  ,position = position_dodge(width = 0)
-  ,size = 1.5) +
-  scale_y_continuous(labels = scales::percent)+
-  facet_wrap(facets = ~sexo_f
-             ,nrow = 2)+
-  scale_color_brewer(palette = "Blues")+
-  labs(
-    #title = 'Proporção das pessoas que se deslocam a pé ou de bicicleta'
-    #, subtitle = "Pessoas acima de 18 anos conforme sexo e idade"
-    title = NULL, subtitle = NULL
-    , color = "Faixa etária", y = "Proporção (%)"
-    , x = "Ano"
-    , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
-  )+
-  theme_minimal()+  
-  theme(legend.position = "bottom",
-        legend.key.width=unit(2,"line"),
-        text = element_text(family = "Times New Roman"),
-        legend.text = element_text(size = rel(0.8)
-                                   , family = "Times New Roman"
-                                   , face = "plain"),
-        legend.title = element_text(size = rel(0.95)
-                                    , family = "Times New Roman"
-                                    , face = "bold"),
-        title = element_text(size = 10
-                             , family = "Times New Roman"
-                             , face = "plain"),
-        plot.margin=unit(c(0,2,0,1),"mm"),
-        strip.text.x = element_text(size=rel(1.2)),
-        panel.grid.major.y = element_line(colour = "grey92"),
-        panel.background = element_rect(fill = "white",colour = NA),
-        legend.box.background = element_rect(fill=alpha('white', 0.7),
-                                             colour = "#A09C9C",
-                                             linewidth = 0.5,
-                                             linetype = "solid"))
 
-ggsave(filename = "figures/prop_idade_sexo_v1.jpg"
-       ,width = 15
-       ,height = 12
-       ,scale = 1.2
-       ,units = "cm"
-       ,dpi = 300)
+
+
 # 4) prop ~ sexo + RACA ----------
 
 # read files
