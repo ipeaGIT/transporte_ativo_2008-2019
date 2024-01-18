@@ -615,11 +615,21 @@ single_dt2[
   )]
 
 # text 
-single_dt2[agegroup_f == "60+"]
-single_dt2[agegroup_f == "55+" & sexo == "Masculino"]
-single_dt2[sexo == "Masculino" & ano_f == "2019"]
+single_dt2[sexo == "Masculino" & ano_f == "2008" & agegroup_f == "18-34"] 
+single_dt2[sexo == "Masculino" & ano_f == "2019" & agegroup_f == "18-34"]
+0.2917469  - 0.2096622 
 
+single_dt2[sexo == "Masculino" & ano_f == "2008" & agegroup_f == "35-54"] 
+single_dt2[sexo == "Masculino" & ano_f == "2019" & agegroup_f == "35-54"]
+0.3102164 -0.2286989 
 
+single_dt2[sexo == "Feminino" & ano_f == "2008" & agegroup_f == "18-34"] 
+single_dt2[sexo == "Feminino" & ano_f == "2019" & agegroup_f == "18-34"]
+0.3054509   - 0.2314635  
+
+single_dt2[sexo == "Feminino" & ano_f == "2008" & agegroup_f == "55+"] 
+single_dt2[sexo == "Feminino" & ano_f == "2019" & agegroup_f == "55+"]
+0.2611987 -0.2312117 
 
 p4 <- 
 ggplot(data = single_dt2
