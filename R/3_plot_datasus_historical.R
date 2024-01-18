@@ -4,18 +4,68 @@ gc(reset = TRUE)
 easypackages::packages('data.table'
                        ,'magrittr'
                        ,'ggplot2'
-                       , 'patchwork')
+                       ,'ipeaplot'
+                       ,'patchwork')
 
 #' @convencoes Pallete
 #' @param gender = "Reds"
 #' @param idade = "Greens"
 #' @param activ = "Blues"
 #' @param race = "Purples"
-#' 
+
+# read data
+dados_acid <- readr::read_rds("data/datasus/metro_by_mode_age_cor_sexo.rds")
+
+
+
+
+
+
+# filtra soh RMs da PNS
+dados_acid[, name_metro := gsub("RM ","",name_metro)]
+dados_acid[name_metro %like% "Distrito Federal", 
+           name_metro := "Distrito Federal"]
+
+rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
+            "Rio de Janeiro","São Paulo","Curitiba","Porto Alegre","Distrito Federal")
+
+
+dados_acid <- dados_acid[ name_metro %in% rm_pns]
+
+# remove unused transport modes
+dados_acid <- subset(dados_acid, causa_name %in% c('auto', 'moto', 'bike', 'walk'))
+
+df_all <- dados_acid[, .(deaths = sum(deaths)), 
+                     by = .(year, causa_name)]
+
+df_metro <- dados_acid[, .(deaths = sum(deaths)), 
+                     by = .(year, name_metro, causa_name)]
+
+
+df_all[, causa_name_f := factor(causa_name,
+                                  levels = c("auto","moto","bike","walk" ,"total"),
+                                  labels = c("Automóvel","Motocicleta", 
+                                             "Bicicleta","A pé","Total"))]
+
+df_metro[, causa_name_f := factor(causa_name,
+                                  levels = c("auto","moto","bike","walk" ,"total"),
+                                  labels = c("Automóvel","Motocicleta", 
+                                             "Bicicleta","A pé","Total"))]
+
+ggplot(data=df_all)+
+  geom_point(aes(x = year, y = deaths, 
+                color = causa_name, group = causa_name)) +
+  geom_line(aes(x = year, y = deaths, 
+                color = causa_name, group = causa_name),
+            linewidth = 0.25) +
+  facet_wrap(vars(causa_name),scales = "free_y")+
+  scale_color_ipea(discrete = T, palette = 'Orange-Blue') +
+  theme_ipea()
+        
+
 # 1) ALL MODES -----
 ## 1.1) Ob. / 100k by gender -----
 
-dados_acid <- readr::read_rds("data/datasus/metro_by_mode_age_cor_sexo.rds")
 dados_acid <- dados_acid[!is.na(prop)]
 dados_acid[,pop := pop * prop]
 
