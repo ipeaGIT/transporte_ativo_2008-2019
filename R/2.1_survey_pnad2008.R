@@ -240,6 +240,9 @@ readr::write_rds(
   ,x = list("sexo_age" = df4c)
   ,compress = "gz"
 )
+
+
+
 # > p_actv ~ sexo + ageLarge ----
 
 df4c <- survey::svyby(
@@ -260,6 +263,49 @@ readr::write_rds(
   ,x = list("sexo_age" = df4c)
   ,compress = "gz"
 )
+
+# AGE2
+df4c <- survey::svyby(
+  formula = ~ v1410sim
+  , by = ~ AGE2  + sexo
+  , design = pos_urbano
+  , vartype = "ci", ci = TRUE
+  , level = 0.95, FUN = svyciprop
+  , multicore = getOption("survey.multicore")
+  , verbose = TRUE
+  , na.rm.all = TRUE
+  , drop.empty.groups = TRUE
+)
+
+df4c
+readr::write_rds(
+  file = "../../data/transporte_ativo_2008-2019/export_pnad08/sexo_ageLarge2.rds"
+  ,x = list("sexo_age" = df4c)
+  ,compress = "gz"
+)
+
+
+# AGE3
+df4c <- survey::svyby(
+  formula = ~ v1410sim
+  , by = ~ AGE3  + sexo
+  , design = pos_urbano
+  , vartype = "ci", ci = TRUE
+  , level = 0.95, FUN = svyciprop
+  , multicore = getOption("survey.multicore")
+  , verbose = TRUE
+  , na.rm.all = TRUE
+  , drop.empty.groups = TRUE
+)
+
+df4c
+readr::write_rds(
+  file = "../../data/transporte_ativo_2008-2019/export_pnad08/sexo_ageLarge3.rds"
+  ,x = list("sexo_age" = df4c)
+  ,compress = "gz"
+)
+
+
 # > p_actv ~ sexo + escolaridade ----
 
 df4c <- survey::svyby(

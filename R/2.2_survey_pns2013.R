@@ -126,12 +126,14 @@ if(post_stratify){
 # > p_actv ~ situacao + region ----
 
 future::plan("multisession",workers  = 20)
+
+
 df1a <- survey::svyby( ~ P040_parte_trajeto
                        , ~ region + urban
                        , design = pos_total
                        , vartype = "ci", ci = TRUE
                        , level = 0.95, FUN = svyciprop
-                       , multicore = getOption("survey.multicore"),
+                       , multicore = getOption("survey.multicore")
                        , verbose = TRUE
                        , na.rm.all = FALSE
                        , drop.empty.groups = FALSE)
@@ -143,7 +145,7 @@ df1b <- survey::svyby( ~ P040_todo_trajeto
                        , design = pos_total
                        , vartype = "ci", ci = TRUE
                        , level = 0.95, FUN = svyciprop
-                       , multicore = getOption("survey.multicore"),
+                       , multicore = getOption("survey.multicore")
                        , verbose = TRUE
                        , na.rm.all = FALSE
                        , drop.empty.groups = FALSE)
@@ -401,6 +403,56 @@ readr::write_rds(
   ,x = list("sexo_age" = df4d )
   ,compress = "gz"
 )
+
+
+### AGE2
+df4d <- survey::svyby(
+  formula = ~ P040_todo_trajeto
+  , by = ~ AGE2 + sexo
+  , design = pos_urbano
+  , vartype = "ci"
+  , ci = TRUE
+  , level = 0.95
+  , FUN = svyciprop
+  , multicore = getOption("survey.multicore")
+  , verbose = TRUE
+  , na.rm.all = TRUE
+  , drop.empty.groups = TRUE
+)
+
+df4d
+
+readr::write_rds(
+  file = "../../data/transporte_ativo_2008-2019/export_pns13/sexo_ageLarge2.rds"
+  ,x = list("sexo_age" = df4d )
+  ,compress = "gz"
+)
+
+
+
+### AGE3
+df4d <- survey::svyby(
+  formula = ~ P040_todo_trajeto
+  , by = ~ AGE3 + sexo
+  , design = pos_urbano
+  , vartype = "ci"
+  , ci = TRUE
+  , level = 0.95
+  , FUN = svyciprop
+  , multicore = getOption("survey.multicore")
+  , verbose = TRUE
+  , na.rm.all = TRUE
+  , drop.empty.groups = TRUE
+)
+
+df4d
+
+readr::write_rds(
+  file = "../../data/transporte_ativo_2008-2019/export_pns13/sexo_ageLarge3.rds"
+  ,x = list("sexo_age" = df4d )
+  ,compress = "gz"
+)
+
 
 # > p_actv ~ sexo + raca  ----
 
