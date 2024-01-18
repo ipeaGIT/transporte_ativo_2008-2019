@@ -590,8 +590,9 @@ single_dt2 <- list(
 
 vec_label <- c("18-34",
                "35-54",
-               "40-49",
                "55+")
+
+table(single_dt2$agegroup)
 
 single_dt2[
   ,agegroup_f := factor(
@@ -620,8 +621,7 @@ single_dt2[sexo == "Masculino" & ano_f == "2019"]
 
 
 
-##  plot v1 ----
-
+p4 <- 
 ggplot(data = single_dt2
        ,aes(
          y = mean
@@ -655,7 +655,7 @@ ggplot(data = single_dt2
     , fill = "Faixa etária"
     , color = "Faixa etária"
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
-  ) +
+    ) +
   # theme_bw(base_size = 18)
   ipeaplot::scale_color_ipea(palette = 'Green') +
   ipeaplot::scale_fill_ipea(palette = 'Green') +
@@ -664,7 +664,8 @@ ggplot(data = single_dt2
 showtext_auto()
 showtext_opts(dpi = 300)
 
-ggsave(filename = "figures/prop_idade_sexo_v2.png"
+ggsave(p4,
+       filename = "./figures/prop_idade_sexo_v2.png"
        ,width = 15
        ,height = 12
        ,scale = 1.2
@@ -673,6 +674,9 @@ ggsave(filename = "figures/prop_idade_sexo_v2.png"
 
 
 
+png("./figures/prop_idade_sexo_v222.png", width = 15,height = 12, units = "cm", res=300)
+print(p4)
+dev.off()
 
 
 # 4) prop ~ sexo + RACA ----------
