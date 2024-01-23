@@ -1,7 +1,7 @@
 # load and read -----
 rm(list=ls()) 
 data_path <- "../../data/transporte_ativo_2008-2019/" 
-data_path <- "data/"
+#data_path <- "data/"
 gc(reset=T)
 library(ggplot2)
 library(readr)
@@ -9,6 +9,12 @@ library(data.table)
 library(magrittr)
 library(patchwork)
 library(openxlsx)
+library(showtext)
+library(ggthemes)
+library(ipeaplot) # remotes::install_github("ipeadata-lab/ipeaplot")
+
+showtext_auto()
+showtext_opts(dpi = 300)
 
 # 1) prop ~ br + metro + sit ----------
 rm(list=ls()) 
@@ -175,6 +181,7 @@ ggplot(data = single_dt2
            , width = .75
   ) +
   scale_y_continuous(labels = scales::percent)+
+  ipeaplot::scale_fill_ipea(palette = "Green")+
   facet_grid(~region_f)+
   geom_errorbar(aes(
     ymin = ci_l1
@@ -188,7 +195,8 @@ ggplot(data = single_dt2
     , fill = "Tipo de \nresposta"
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
   )+
-  theme_classic()+
+  ipeaplot::theme_ipea(legend.position = "bottom")
+theme_classic()+
   # Accent, Dark2, Paired, Pastel1, Pastel2, Set1, Set2, Set3
   scale_fill_brewer(palette = "Pastel1") +
   theme(legend.key.width=unit(2,"line"),

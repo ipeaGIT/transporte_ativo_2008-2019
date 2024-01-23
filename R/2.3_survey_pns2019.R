@@ -397,6 +397,33 @@ readr::write_rds(
   ,compress = "gz"
 )
 
+# > p_actv ~ sexo + raca_group + dummyMetro  ----
+
+options(survey.lonely.psu = "adjust") 
+
+df4d <- survey::svyby(
+  formula = ~ P040_todo_trajeto
+  , by = ~ raca_group + sexo + dummyMetro
+  , design = pos_urbano
+  , vartype = "ci"
+  , ci = TRUE
+  , level = 0.95
+  , FUN = svyciprop
+  , multicore = getOption("survey.multicore")
+  , verbose = TRUE
+  , na.rm.all = TRUE
+  , drop.empty.groups = TRUE
+)
+
+df4d
+
+readr::write_rds(
+  file = "../../data/transporte_ativo_2008-2019/export_pns19/sexo_raca_dummyMetro.rds"
+  ,x = list("sexo_raca_dummyMetro" = df4d )
+  ,compress = "gz"
+)
+
+
 # > p_actv ~ sexo + ageLarge  ----
 
 options(survey.lonely.psu = "adjust") 
@@ -498,16 +525,16 @@ tmp <- pns2019_dt[V0025A == "1" &
                     !is.na(peso_morador_selec) &
                     !is.na(P040) &
                     C008 >= 18
-        ,{
-          # ww <- V00291
-          # ww <- V00291 * peso_morador_selec
-          ww <- peso_morador_selec
-         total <-  sum(ww,na.rm = TRUE)
-         total_ativ <-  sum(ww[P040 == "Sim, todo o trajeto"],na.rm = TRUE)
-         prop <- round(100 * total_ativ / total,1)
-         list(total,total_ativ,prop)
-        }
-        ,by = .(edugroup,sexo)]
+                  ,{
+                    # ww <- V00291
+                    # ww <- V00291 * peso_morador_selec
+                    ww <- peso_morador_selec
+                    total <-  sum(ww,na.rm = TRUE)
+                    total_ativ <-  sum(ww[P040 == "Sim, todo o trajeto"],na.rm = TRUE)
+                    prop <- round(100 * total_ativ / total,1)
+                    list(total,total_ativ,prop)
+                  }
+                  ,by = .(edugroup,sexo)]
 tmp[]
 tmp[] %>% .[c(1,2,3,7,8,4,5,6),]
 df4d[]

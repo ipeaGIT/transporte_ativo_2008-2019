@@ -478,6 +478,30 @@ readr::write_rds(
   , compress = "gz"
 )
 
+# > p_actv ~ sexo + raca + dummyMetro  ----
+
+df4e <- survey::svyby(
+  ~ P040_todo_trajeto
+  , by = ~  raca_group + sexo + dummyMetro
+  , design = pos_urbano
+  , vartype = "ci"
+  , ci = TRUE
+  , level = 0.95
+  , FUN = svyciprop
+  , multicore = getOption("survey.multicore")
+  , verbose = TRUE
+  , na.rm.all = TRUE
+  , drop.empty.groups = TRUE
+)
+
+df4e
+
+readr::write_rds(
+  file = "../../data/transporte_ativo_2008-2019/export_pns13/sexo_raca_dummyMetro.rds"
+  , x = list("sexo_raca_dummyMetro" = df4e)
+  , compress = "gz"
+)
+
 # > p_actv ~ sexo + escolaridade ----
 
 options(survey.lonely.psu = "adjust") 

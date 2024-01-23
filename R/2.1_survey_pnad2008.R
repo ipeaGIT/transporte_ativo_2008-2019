@@ -80,7 +80,7 @@ pres_todo_traj <- pres_urbano %>%
 
 pres_todo_parte_traj_metro <-  pres_urbano %>% 
   subset(.,dummyMetro == "Metro")
-  
+
 # 3) PostStratify ----
 
 system.time({
@@ -326,6 +326,30 @@ readr::write_rds(
   ,x = list("sexo_esc" = df4c)
   ,compress = "gz"
 )
+
+
+# > p_actv ~ sexo + raca + dummyMetro ----
+
+options(survey.lonely.psu = "adjust") 
+
+df6a <- survey::svyby(
+  formula = ~v1410sim
+  , by = ~ sexo + raca_group + dummyMetro
+  , design = pos_urbano
+  , vartype = "ci", ci = TRUE
+  , level = 0.95
+  , FUN = svyciprop
+  , verbose = TRUE
+  , na.rm.all = TRUE
+  , drop.empty.groups = TRUE
+)
+
+df6a
+readr::write_rds(
+  file = "../../data/transporte_ativo_2008-2019/export_pnad08/sexo_race_dummyMetro.rds"
+  ,x = list("sexo_race_dummyMetro" = df6a)
+  ,compress = "gz"
+) 
 
 
 # > p_actv ~ sexo + raca  ----
