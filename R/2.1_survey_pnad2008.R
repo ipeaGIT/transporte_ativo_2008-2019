@@ -80,7 +80,7 @@ pres_todo_traj <- pres_urbano %>%
 
 pres_todo_parte_traj_metro <-  pres_urbano %>% 
   subset(.,dummyMetro == "Metro")
-  
+
 # 3) PostStratify ----
 
 system.time({

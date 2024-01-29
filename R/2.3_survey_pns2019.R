@@ -525,16 +525,16 @@ tmp <- pns2019_dt[V0025A == "1" &
                     !is.na(peso_morador_selec) &
                     !is.na(P040) &
                     C008 >= 18
-        ,{
-          # ww <- V00291
-          # ww <- V00291 * peso_morador_selec
-          ww <- peso_morador_selec
-         total <-  sum(ww,na.rm = TRUE)
-         total_ativ <-  sum(ww[P040 == "Sim, todo o trajeto"],na.rm = TRUE)
-         prop <- round(100 * total_ativ / total,1)
-         list(total,total_ativ,prop)
-        }
-        ,by = .(edugroup,sexo)]
+                  ,{
+                    # ww <- V00291
+                    # ww <- V00291 * peso_morador_selec
+                    ww <- peso_morador_selec
+                    total <-  sum(ww,na.rm = TRUE)
+                    total_ativ <-  sum(ww[P040 == "Sim, todo o trajeto"],na.rm = TRUE)
+                    prop <- round(100 * total_ativ / total,1)
+                    list(total,total_ativ,prop)
+                  }
+                  ,by = .(edugroup,sexo)]
 tmp[]
 tmp[] %>% .[c(1,2,3,7,8,4,5,6),]
 df4d[]
