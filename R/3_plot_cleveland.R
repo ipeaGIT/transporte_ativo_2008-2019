@@ -780,7 +780,7 @@ single_dt2[
   )]
 
 single_dt2[
-  ,dummeyMetro_f := factor(
+  ,dummyMetro_f := factor(
     x = dummyMetro      
     ,levels = c("Metro","Non-metro")
     ,labels = c("Brasil Metropolitano","Brasil Não-Metropolitano")
@@ -870,6 +870,10 @@ ggsave(filename = "figures/prop_raca_sexo_dummyMetro.jpg"
        ,scale = 1.3
        ,units = "cm"
        ,dpi = 300)
+
+
+
+
 
 # 5) prop ~ sexo + ESC ----------
 # read files
