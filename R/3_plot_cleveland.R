@@ -820,6 +820,13 @@ ggplot(data = single_dt2
     )
     ,alpha = 0.10
     ,position = position_dodge(width = 0)) +
+  # text
+  geom_text(data = single_dt2[ano %in% c(2008),]
+            ,aes(x = ano_f, y = mean, label = round(100*mean,1)
+            ),size = 2.25,nudge_x =-.15) +
+  geom_text(data = single_dt2[ano %in% c(2019),]
+            ,aes(x = ano_f, y = mean, label = round(100*mean,1)
+            ),size = 2.25,nudge_x =+.15) +
   facet_grid(rows = vars(dummyMetro_f),cols = vars(sexo_f))+
   scale_y_continuous(labels = scales::percent
                      ,limits = c(0,max(single_dt2$ci_u)))+
