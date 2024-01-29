@@ -871,7 +871,7 @@ ggplot(data = single_dt2
 #        panel.background = element_rect(fill = "white",colour = NA))
 
 
-ggsave(filename = "figures/prop_raca_sexo_dummyMetro.jpg"
+ggsave(filename = "figures/prop_raca_sexo_dummyMetro_values.png"
        ,width = 15
        ,height = 15
        ,scale = 1.3
