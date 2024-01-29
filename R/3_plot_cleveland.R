@@ -1,12 +1,20 @@
-rm(list=ls())
+# load and read -----
+rm(list=ls()) 
+data_path <- "../../data/transporte_ativo_2008-2019/" 
+#data_path <- "data/"
 gc(reset=T)
 library(ggplot2)
 library(readr)
 library(data.table)
 library(magrittr)
 library(patchwork)
+library(openxlsx)
+library(showtext)
+library(ggthemes)
 library(ipeaplot) # remotes::install_github("ipeadata-lab/ipeaplot")
 
+showtext_auto()
+showtext_opts(dpi = 300)
 
 
 # 1) prop ~ quintil + regiao ----------
@@ -125,7 +133,8 @@ ggplot(data = single_dt2,
     , fill = "Quintil de\n renda"
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
   )+
-  theme_minimal()+
+  ipeaplot::theme_ipea()
+theme_minimal()+
   theme(legend.key.width=unit(2,"line"),
         text = element_text(family = "Times New Roman"),
         legend.text = element_text(size = rel(0.8)
@@ -143,18 +152,19 @@ ggplot(data = single_dt2,
         panel.background = element_rect(fill = "white",colour = NA))
 
 
-ggsave(filename = "figures/prop_regiao_quint.jpg"
+ggsave(filename = "figures/prop_regiao_quint.png"
        ,width = 15
        ,height = 9
        ,scale = 1.5
-       ,units = "cm"
+       ,units = "cm",bg = "white"
+       ,device = "png"
        ,dpi = 300)
 # 1) prop ~ quintil + Metro ----------
 
 # read files
 rm(list=ls())
 data_path <- "../../data/transporte_ativo_2008-2019/"
-data_path <- "data/"
+#data_path <- "data/"
 pnad2008_br <- readr::read_rds(paste0(data_path,"export_pnad08/br_quint.rds"))
 pns13_br <- readr::read_rds(paste0(data_path,"export_pns13/br_quint.rds"))
 pns19_br <- readr::read_rds(paste0(data_path,"export_pns19/br_quint.rds"))
@@ -264,8 +274,9 @@ ggplot(data = single_dt2,
     , fill = "Quintil de\n renda"
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
   )+
+  #ipeaplot::theme_ipea(legend.position = "bottom")
   theme_minimal()+  
-  theme(legend.position = "bottom",
+  theme(,
         legend.key.width=unit(2,"line"),
         text = element_text(family = "Times New Roman"),
         legend.text = element_text(size = rel(0.8)
@@ -287,16 +298,17 @@ ggplot(data = single_dt2,
 ggsave(filename = "figures/prop_metro_quint.jpg"
        ,width = 15
        ,height = 18
-       ,scale = 1.5
+       #,scale = 1.5
        ,units = "cm"
-       ,dpi = 300)
+       ,dpi = 72
+       ,scale = 1.5)
 
 # 2) prop ~ sexo + age ----------
 
 # read files
 rm(list=ls())
 data_path <- "../../data/transporte_ativo_2008-2019/"
-data_path <- "data/"
+#data_path <- "data/"
 gc(reset=TRUE)
 pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/sexo_age.rds"))
 pns13 <- readr::read_rds(paste0(data_path,"export_pns13/sexo_age.rds"))
@@ -632,12 +644,12 @@ single_dt2[sexo == "Feminino" & ano_f == "2019" & agegroup_f == "55+"]
 0.2611987 -0.2312117 
 
 p4 <- 
-ggplot(data = single_dt2
-       ,aes(
-         y = mean
-         , x =  ano_f
-         # , group = agegroup_f
-       )) + 
+  ggplot(data = single_dt2
+         ,aes(
+           y = mean
+           , x =  ano_f
+           # , group = agegroup_f
+         )) + 
   geom_path(aes(
     x = ano_f
     , color = agegroup_f
@@ -665,7 +677,7 @@ ggplot(data = single_dt2
     , fill = "Faixa etária"
     , color = "Faixa etária"
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
-    ) +
+  ) +
   # theme_bw(base_size = 18)
   ipeaplot::scale_color_ipea(palette = 'Green') +
   ipeaplot::scale_fill_ipea(palette = 'Green') +
@@ -677,7 +689,7 @@ showtext_opts(dpi = 300)
 ggsave(p4,
        filename = "./figures/prop_idade_sexo_v2.png"
        ,width = 15
-       ,height = 12
+       ,height = 9
        ,scale = 1.2
        ,units = "cm"
        ,dpi = 300)
@@ -689,31 +701,31 @@ print(p4)
 dev.off()
 
 
-# 4) prop ~ sexo + RACA ----------
+# 4) prop ~ sexo + RACA + dummeyMetro----------
 
 # read files
 rm(list=ls())
 data_path <- "../../data/transporte_ativo_2008-2019/"
-data_path <- "data/"
+#data_path <- "data/"
 gc(reset=TRUE)
-pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/sexo_race.rds"))
-pns13 <- readr::read_rds(paste0(data_path,"export_pns13/sexo_raca.rds"))
-pns19 <- readr::read_rds(paste0(data_path,"export_pns19/sexo_race.rds"))
+pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/sexo_race_dummyMetro.rds"))
+pns13 <- readr::read_rds(paste0(data_path,"export_pns13/sexo_raca_dummyMetro.rds"))
+pns19 <- readr::read_rds(paste0(data_path,"export_pns19/sexo_raca_dummyMetro.rds"))
 
 # set DT
-pnad2008 <- pnad2008$sexo_race
-pns13 <- pns13$sexo_raca
-pns19 <- pns19$sexo_race_1
+pnad2008 <- pnad2008$sexo_race_dummyMetro
+pns13 <- pns13$sexo_raca_dummyMetro
+pns19 <- pns19$sexo_raca_dummyMetro
 
 data.table::setDT(pnad2008)
 data.table::setDT(pns13)
 data.table::setDT(pns19)
 
 # rename files
-vec_names <- c("sexo","raca","mean","ci_l","ci_u")
+vec_names <- c("sexo","raca","dummyMetro","mean","ci_l","ci_u")
 names(pnad2008) <- vec_names
-names(pns19) <- vec_names
-names(pns13) <- c("raca","sexo","mean","ci_l","ci_u")
+names(pns19) <-  c("raca","sexo","dummyMetro","mean","ci_l","ci_u")
+names(pns13) <- c("raca","sexo","dummyMetro","mean","ci_l","ci_u")
 
 
 # add columns
@@ -727,8 +739,8 @@ single_dt2 <- list(
   pnad2008
   ,pns13
   ,pns19
-) %>% data.table::rbindlist(use.names = TRUE) %>% 
-  .[raca %in% c("Branca","Negra"),]
+) %>% data.table::rbindlist(use.names = TRUE) 
+single_dt2 <- single_dt2[raca %in% c("Branca","Negra"),]
 
 single_dt2
 
@@ -767,6 +779,12 @@ single_dt2[
     ,labels = c("Mulheres","Homens")
   )]
 
+single_dt2[
+  ,dummeyMetro_f := factor(
+    x = dummyMetro      
+    ,levels = c("Metro","Non-metro")
+    ,labels = c("Brasil Metropolitano","Brasil Não-Metropolitano")
+  )]
 
 single_dt2
 # text 
@@ -802,7 +820,7 @@ ggplot(data = single_dt2
     )
     ,alpha = 0.10
     ,position = position_dodge(width = 0)) +
-  facet_wrap(~sexo_f)+
+  facet_grid(rows = vars(dummyMetro_f),cols = vars(sexo_f))+
   scale_y_continuous(labels = scales::percent
                      ,limits = c(0,max(single_dt2$ci_u)))+
   scale_color_manual(values = c(
@@ -825,28 +843,30 @@ ggplot(data = single_dt2
     , color = "Sexo e Cor/raça"
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
   )+
-  guides(color = guide_legend(
-    override.aes = list(linetype = 0))
-    , fill = "none")+
-  theme_minimal()+  
-  theme(legend.key.width=unit(2,"line"),
-        legend.position = "bottom",
-        text = element_text(family = "Times New Roman"),
-        legend.text = element_text(size = rel(1)
-                                   , family = "Times New Roman"
-                                   , face = "plain"),
-        legend.title = element_text(size = rel(1)
-                                    , family = "Times New Roman"
-                                    , face = "bold"),
-        axis.text = element_text(size=rel(1.1)),
-        plot.margin=unit(c(0,2,0,1),"mm"),
-        strip.text.x = element_text(size=rel(1.2)),
-        panel.background = element_rect(fill = "white",colour = NA))
+  #guides(color = guide_legend(
+  #  override.aes = list(linetype = 0))
+  #  , fill = "none")+
+  # theme(text = element_text(family = "Frutiger-LT-47-LightCn"))+
+  ipeaplot::theme_ipea(legend.position = "bottom")
+#theme_minimal()+  
+#  theme(legend.key.width=unit(2,"line"),
+#        legend.position = "bottom",
+#        text = element_text(family = "Times New Roman"),
+#        legend.text = element_text(size = rel(1)
+#                                   , family = "Times New Roman"
+#                                   , face = "plain"),
+#        legend.title = element_text(size = rel(1)
+#                                    , family = "Times New Roman"
+#                                    , face = "bold"),
+#        axis.text = element_text(size=rel(1.1)),
+#        plot.margin=unit(c(0,2,0,1),"mm"),
+#        strip.text.x = element_text(size=rel(1.2)),
+#        panel.background = element_rect(fill = "white",colour = NA))
 
 
-ggsave(filename = "figures/prop_raca_sexo.jpg"
+ggsave(filename = "figures/prop_raca_sexo_dummyMetro.jpg"
        ,width = 15
-       ,height = 9
+       ,height = 15
        ,scale = 1.3
        ,units = "cm"
        ,dpi = 300)
@@ -855,7 +875,7 @@ ggsave(filename = "figures/prop_raca_sexo.jpg"
 # read files
 rm(list=ls())
 data_path <- "../../data/transporte_ativo_2008-2019/"
-data_path <- "data/"
+#data_path <- "data/"
 gc(reset=TRUE)
 pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/sexo_esc.rds"))
 pns13 <- readr::read_rds(paste0(data_path,"export_pns13/sexo_esc.rds"))
@@ -924,12 +944,12 @@ single_dt2[edugroup == "Superior completo" &
              ano == 2019,round(mean * 100 ,1),by = sexo]
 
 # plot
-ggplot(data = single_dt2
-       ,aes(
-         x = ano_f    
-         , y = mean
-         , group = edugroup_f 
-       )) + 
+pf <- ggplot(data = single_dt2
+             ,aes(
+               x = ano_f    
+               , y = mean
+               , group = edugroup_f 
+             )) + 
   geom_path(aes(
     y = mean
     , color = edugroup_f
@@ -954,6 +974,13 @@ ggplot(data = single_dt2
     )
     ,alpha = 0.10
     ,position = position_dodge(width = 0.10)) +
+  # text
+  geom_text(data = single_dt2[ano %in% c(2008),]
+            ,aes(x = ano_f, y = mean, label = round(100*mean,1)
+            ),size = 2.25,nudge_x =-.15) +
+  geom_text(data = single_dt2[ano %in% c(2019),]
+            ,aes(x = ano_f, y = mean, label = round(100*mean,1)
+            ),size = 2.25,nudge_x =+.15) +
   scale_y_continuous(labels = scales::percent)+
   facet_wrap(facets = ~sexo_f
              ,nrow = 2)+
@@ -983,26 +1010,29 @@ viridis::scale_color_viridis(discrete = TRUE,alpha = 1,option = "H")+
   guides(color = guide_legend(
     override.aes = list(linetype = 0))
     , fill = "none")+
-  theme_minimal()+   
-  theme(legend.key.width=unit(2,"line"),
-        text = element_text(family = "Times New Roman"),
-        legend.text = element_text(size = rel(0.8)
-                                   , family = "Times New Roman"
-                                   , face = "plain"),
-        legend.title = element_text(size = rel(0.95)
-                                    , family = "Times New Roman"
-                                    , face = "bold"),
-        title = element_text(size = 10
-                             , family = "Times New Roman"
-                             , face = "plain"),
-        plot.margin=unit(c(0,2,0,1),"mm"),
-        strip.text.x = element_text(size=rel(1.2)),
-        panel.grid.major.y = element_line(colour = "grey92"),
-        panel.background = element_rect(fill = "white",colour = NA))
+  theme(text = ggplot2::element_text(family = "Frutiger-LT-55-Roman"))+
+  ipeaplot::theme_ipea()
+pf  
+#theme_minimal()+   
+#theme(legend.key.width=unit(2,"line"),
+#      text = element_text(family = "Times New Roman"),
+#      legend.text = element_text(size = rel(0.8)
+#                                 , family = "Times New Roman"
+#                                 , face = "plain"),
+#      legend.title = element_text(size = rel(0.95)
+#                                  , family = "Times New Roman"
+#                                  , face = "bold"),
+#      title = element_text(size = 10
+#                           , family = "Times New Roman"
+#                           , face = "plain"),
+#      plot.margin=unit(c(0,2,0,1),"mm"),
+#      strip.text.x = element_text(size=rel(1.2)),
+#      panel.grid.major.y = element_line(colour = "grey92"),
+#      panel.background = element_rect(fill = "white",colour = NA))
 
 
 
-ggsave(filename = "figures/prop_escolaridade_sexo.jpg"
+ggsave(pf,filename = "figures/prop_escolaridade_sexo.jpg"
        ,width = 15
        ,height = 12
        ,scale = 1.2
@@ -1358,11 +1388,11 @@ ggsave(filename = "figures/prop_time_sexo1.jpg"
 # read files
 rm(list=ls())
 data_path <- "../../data/transporte_ativo_2008-2019/"
-data_path <- "data/"
+#data_path <- "data/"
 gc(reset=TRUE)
 
 
-pns19_mean <- readr::read_rds(paste0(data_path,"export_pns19/"))
+#pns19_mean <- readr::read_rds(paste0(data_path,"export_pns19/"))
 pns19 <- readr::read_rds(paste0(data_path,"export_pns19/metro_quint.rds"))
 
 # add columns
@@ -1407,9 +1437,9 @@ tmp_plot <- single_dt2[quintileMetro %in% c(1,3,5)
 
 # text 
 values_city <- function(city){
-tmp_plot[metro_f == city,
-         paste0(round(mean * 100,1),"% ",quintileMetro,"ºQ")] %>% 
-  gsub("\\.","\\,",.) %>% paste0(.,collapse = "; ")
+  tmp_plot[metro_f == city,
+           paste0(round(mean * 100,1),"% ",quintileMetro,"ºQ")] %>% 
+    gsub("\\.","\\,",.) %>% paste0(.,collapse = "; ")
 }
 values_city("Salvador")
 values_city("Belém")
@@ -1438,6 +1468,11 @@ ggplot() +
              , shape = 21
              ,position = position_dodge(width = +0.25)
              ,alpha = 1) +
+  # text
+  geom_text(data = tmp_plot[quintileMetro_f == 3],
+            aes(x = mean,y = metro_f
+                ,label = paste0(round(100*mean,1),""))
+            ,size = 2.35,nudge_y = .32)+
   # scale
   scale_x_continuous(labels = scales::percent)+
   scale_fill_manual(values = c(
@@ -1451,31 +1486,32 @@ ggplot() +
   labs(
     #title = 'Proporção de pessoas que se deslocam a pé ou de bicicleta'
     #, subtitle = "Conforme região metropolitana, sexo, e quintis de renda"
-    title = NULL, subtitle = NULL
+    title = NULL, subtitle = NULL,label = NULL,
     , x = "Proporção (%)"
     , y = NULL
     , fill = "Quintil"
     , caption = "Fonte: PNS (2019)"
   )+
   guides(fill = guide_legend(label.position = "bottom"),
-         color = "none")+
-  theme_minimal()+     
-  theme(legend.position = "bottom",
-        legend.key.width=unit(2,"line"),
-        text = element_text(family = "Times New Roman"),
-        legend.text = element_text(size = rel(0.8)
-                                   , family = "Times New Roman"
-                                   , face = "plain"),
-        legend.title = element_text(size = rel(0.95)
-                                    , family = "Times New Roman"
-                                    , face = "bold"),
-        title = element_text(size = 10
-                             , family = "Times New Roman"
-                             , face = "plain"),
-        plot.margin=unit(c(0,2,0,1),"mm"),
-        strip.text.x = element_text(size=rel(1.2)),
-        panel.grid.major.y = element_line(colour = "grey92"),
-        panel.background = element_rect(fill = "white",colour = NA))
+         color = "none",label = "none")+
+  ipeaplot::theme_ipea(legend.position = "bottom")
+#theme_minimal()+     
+#theme(legend.position = "bottom",
+#      legend.key.width=unit(2,"line"),
+#      text = element_text(family = "Times New Roman"),
+#      legend.text = element_text(size = rel(0.8)
+#                                 , family = "Times New Roman"
+#                                 , face = "plain"),
+#      legend.title = element_text(size = rel(0.95)
+#                                  , family = "Times New Roman"
+#                                  , face = "bold"),
+#      title = element_text(size = 10
+#                           , family = "Times New Roman"
+#                           , face = "plain"),
+#      plot.margin=unit(c(0,2,0,1),"mm"),
+#      strip.text.x = element_text(size=rel(1.2)),
+#      panel.grid.major.y = element_line(colour = "grey92"),
+#      panel.background = element_rect(fill = "white",colour = NA))
 
 
 ggsave(filename = "figures/prop_quint_metro.jpg"
