@@ -3,15 +3,15 @@ rm(list=ls())
 
 easypackages::packages('data.table'
                        ,'magrittr'
-                       ,'ggplot2'
+                       ,'ggplot2','sidrar'
                        ,'microdatasus')
 
 # pop proj 2019 -------
 
-pop_13_to_19 <- "data-raw/sidrar/pop_2010_to_2021.rds"
+pop_11_to_21 <- "data-raw/sidrar/pop_2011_to_2021.rds"
 
 
-if(!file.exists(pop_13_to_19)){
+if(!file.exists(pop_11_to_21)){
   dt_pop <- sidrar::get_sidra(x = 6579
                               , period = as.character(2011:2021)
                               , variable = 9324
