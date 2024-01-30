@@ -817,7 +817,8 @@ ggplot(data = single_dt2
       , ymax = ci_u
       , group = label
       , fill = label
-    )
+      )
+    , show.legend = FALSE
     ,alpha = 0.10
     ,position = position_dodge(width = 0)) +
   # text
