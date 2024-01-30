@@ -881,6 +881,45 @@ ggsave(filename = "figures/prop_raca_sexo_dummyMetro_values.png"
 
 
 
+# 4b) prop ~ sexo + Metro----------
+
+
+data_path <- "../../data/transporte_ativo_2008-2019/"
+pns19 <- readr::read_rds(paste0(data_path,"export_pns19/sexo_raca_Metro.rds"))
+pns19 <- rbindlist(pns19)
+
+pns19 |>
+  mutate(metro = forcats::fct_reorder(metro, P040_todo_trajeto)) |>
+  ggplot() +
+  geom_point(aes(y=metro, x=P040_todo_trajeto, color=sexo)) +
+  geom_pointrange(aes(y=metro, x=P040_todo_trajeto, 
+                      xmin = ci_l, xmax = ci_u, color=sexo),
+                  position = position_dodge(width = 0.2)) +
+  labs(x= 'Proporção (%)', y = 'Região Metropolitana'
+       , color = "Sexo"
+       , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
+  ) +
+  scale_x_continuous(labels = scales::percent) +
+  scale_color_manual(values = c('#620C1A','#111F4F'))+
+  geom_text(data = pns19[sexo %in% c('Masculino'),],
+            aes(x = P040_todo_trajeto, y = metro, color=sexo,
+                label = round(P040_todo_trajeto*100,1)),
+            size = 2.25,nudge_y =+.2,nudge_x = .0) +
+  geom_text(data = pns19[sexo %in% c('Feminino'),],
+            aes(x = P040_todo_trajeto, y = metro, color=sexo,
+                label = round(P040_todo_trajeto*100,1)),
+            size = 2.25,nudge_y =-.2, nudge_x = .0) +
+  
+  ipeaplot::theme_ipea(legend.position = "bottom")
+
+
+ggsave(filename = "figures/prop_raca_sexo_Metro_values.png"
+       ,width = 15
+       ,height = 15
+       ,scale = 1.3
+       ,units = "cm"
+       ,dpi = 300)
+
 
 
 # 5) prop ~ sexo + ESC ----------
