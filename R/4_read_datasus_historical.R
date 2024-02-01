@@ -175,7 +175,7 @@ filter_datasus <- function(filepath){
                       , paste0("V89", 0:3)
   )
   
-  dt[ CAUSABAS_UNIQUE %in% not_transport, causa_name := NA]
+ # dt[ CAUSABAS_UNIQUE %in% not_transport, causa_name := NA]
   table(dt$causa_name, useNA = 'always')
   
   
@@ -265,6 +265,18 @@ filepath <-  "../../data/transporte_ativo_2008-2019/export_datasus/SIM-DOEXT_201
 
 dt_merge <- filter_datasus(filepath)
 
+# check capitals
+330455 # rj
+355030 # SP
+310620 # bh
+410690 # cwb
+dt_merge[causa_name == "bike" & code_muni_sus == 330455,sum(num_acid),by = .(year)]
+dt_merge[causa_name == "bike" & code_muni_sus == 355030,sum(num_acid),by = .(year)]
+dt_merge[causa_name == "bike" & code_muni_sus == 310620,sum(num_acid),by = .(year)]
+dt_merge[causa_name == "bike" & code_muni_sus == 410690,sum(num_acid),by = .(year)]
+
+
+
 readr::write_rds(dt_merge,"data/datasus/deaths_cor_age_sexo.rds"
                  ,compress = "gz")
 
@@ -272,6 +284,17 @@ readr::write_rds(dt_merge,"data/datasus/deaths_cor_age_sexo.rds"
 rm(list=ls())
 
 dt_merge <- readr::read_rds("data/datasus/deaths_cor_age_sexo.rds")
+
+# check capitals
+330455 # rj
+355030 # SP
+310620 # bh
+410690 # cwb
+dt_merge[causa_name == "bike" & code_muni_sus == 330455,sum(num_acid),by = .(year)]
+dt_merge[causa_name == "bike" & code_muni_sus == 355030,sum(num_acid),by = .(year)]
+dt_merge[causa_name == "bike" & code_muni_sus == 310620,sum(num_acid),by = .(year)]
+dt_merge[causa_name == "bike" & code_muni_sus == 410690,sum(num_acid),by = .(year)]
+
 # compare data
 dt_merge[,sum(num_acid),by = .(year)] |> plot()
 dt_merge[causa_name == 'bike',sum(num_acid),by = .(year)] 
@@ -343,7 +366,8 @@ ibge_2010 <- ibge_2010[,list(pop = sum(valor,na.rm = TRUE))
                        ,by = .(municipio_codigo,code_muni_sus
                                ,year,cor,sexo,AGE)]
 # ## Censo w/ metro info ----
-dt_metro <- geobr::read_metro_area(year = 2018)
+#dt_metro <- geobr::read_metro_area(year = 2018)
+dt_metro <- readr::read_rds("data-raw/sidrar/read_metro_area.rds")
 setDT(dt_metro)
 dt_metro[,code_muni := as.character(code_muni)]
 ibge_2010 <- ibge_2010[dt_metro, on = c('municipio_codigo'= 'code_muni'),
@@ -355,14 +379,12 @@ ibge_2010[,prop := pop/sum(pop,na.rm = TRUE),by = name_metro]
 ibge_2010[pop == 0,prop := 0]
 ibge_2010[,sum(prop),by = name_metro] # should be always 1
 ibge_2010[,sum(pop)]                  # 190755723
-# # 4) Read Pop 2013 - 2019 & Metro Name -----
+readr::write_rds(ibge_2010,file = "data-raw/sidrar/censo_2010_RM.rds")
+# # 4) Pop projection & Metro Name -----
 #
-dt_pop <- readr::read_rds("data-raw/sidrar/pop_2013_to_2019.rds")
+dt_pop <- readr::read_rds("data-raw/sidrar/pop_2011_to_2021.rds")
 
 dt_pop$year %>% table(useNA = "always")
-
-
-
 
 ## Pop w/ metro info ------
 dt_metro <- geobr::read_metro_area(year = 2018)
@@ -371,18 +393,16 @@ dt_metro[,code_muni_sus := stringr::str_sub(string = code_muni,start = 1,end = 6
 dt_metro <- dt_metro[,.SD,.SDcols = c("code_muni_sus","name_metro")]
 
 
-
-
 # 5) Merge data -----
 
 ## . w/ metro name & pop data ----
 tmp_dt_acid <- data.table::merge.data.table(
   x = dt_merge,
   y = dt_metro,
-  by = c('code_muni_sus')) # %>%
-#   data.table::merge.data.table(
-#   x = .  ,y = dt_pop  ,by = c('code_muni_sus','year')
-# )
+  by = c('code_muni_sus'))  %>%
+  data.table::merge.data.table(
+    x = .  ,y = dt_pop  ,by = c('code_muni_sus','year')
+  )
 
 tmp_dt_acid$causa_name %>% table(useNA = "always")
 tmp_dt_acid$year %>% table(useNA = "always")
@@ -392,8 +412,8 @@ tmp_dt_acid$AGE %>% table(useNA = "always")
 
 # ## Rbind .  ----
 
-dados_acid <- tmp_dt_acid[, list("deaths" = sum(total_acid,na.rm = TRUE))
-                          ,by = .(name_metro,causa_name,year,AGE,cor,sexo)]
+#dados_acid <- tmp_dt_acid[, list("deaths" = sum(total_acid,na.rm = TRUE))
+#                          ,by = .(name_metro,causa_name,year,AGE,cor,sexo)]
 
 
 
@@ -418,8 +438,9 @@ tmp_dt_acid$AGE %>% table(useNA = "always")
 
 
 
-## . w/ RM pop 2013-2019 ----
-tmp_pop_rm <- copy(tmp_dt_acid)[,.SD[1],by = .(name_metro, municipio_codigo,year)]
+## . w/ RM pop 2011-2021 ----
+tmp_pop_rm <- copy(tmp_dt_acid)[,.SD[1],by = .(valor,name_metro, municipio_codigo,year)] %>% 
+  .[,.SD,.SDcols = c('valor','name_metro', 'municipio_codigo','year')]
 tmp_pop_rm <- tmp_pop_rm[,list(pop = sum(valor)),by = .(name_metro,year)]
 tmp_pop_rm[name_metro == "RM São Paulo"] # check
 dados_acid <- dados_acid[tmp_pop_rm,on = c("name_metro","year")]
@@ -431,6 +452,7 @@ dados_acid$year %>% table(useNA = "always")
 dados_acid$cor %>% table(useNA = "always")
 dados_acid$sexo %>% table(useNA = "always")
 dados_acid$AGE %>% table(useNA = "always")
+
 ## . w/ IBGE 2010 prop----
 ibge_2010$AGE %>% table(useNA = "always")
 ibge_2010$sexo %>% table(useNA = "always")
