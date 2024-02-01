@@ -3,26 +3,36 @@ rm(list=ls())
 
 easypackages::packages('data.table'
                        ,'magrittr'
-                       ,'ggplot2'
+                       ,'ggplot2','sidrar'
                        ,'microdatasus')
 
 # pop proj 2019 -------
 
-pop_13_to_19 <- "data-raw/sidrar/pop_2010_to_2021.rds"
+pop_11_to_21 <- "data-raw/sidrar/pop_2011_to_2021.rds"
 
 
-if(!file.exists(pop_13_to_19)){
-  dt_pop <- sidrar::get_sidra(x = 6579
-                              , period = as.character(2011:2021)
+if(!file.exists(pop_11_to_21)){
+  # 2011 - 2015
+  dt_pop0 <- sidrar::get_sidra(x = 6579
+                              , period = as.character(2011:2015)
                               , variable = 9324
                               , geo = "City")
-  data.table::setDT(dt_pop)
+  data.table::setDT(dt_pop0)
+  # 2016 - 2021
+  dt_pop1 <- sidrar::get_sidra(x = 6579
+                              , period = as.character(2016:2021)
+                              , variable = 9324
+                              , geo = "City")
+  data.table::setDT(dt_pop1)
+  # merge
+  dt_pop <- rbind(dt_pop0,dt_pop1)
+  #
   names(dt_pop) <- janitor::make_clean_names(names(dt_pop))
   dt_pop[,code_muni_sus := stringr::str_sub(string = municipio_codigo,start = 1,end = 6)]
   setnames(dt_pop,"ano","year")
   dt_pop <- dt_pop[,.SD,.SDcols = c("municipio_codigo","code_muni_sus","valor","year")]
   # save
-  readr::write_rds(dt_pop,pop_13_to_19,compress = "gz")
+  readr::write_rds(dt_pop,pop_11_to_21,compress = "gz")
 }
 # pop 2010 censo ----
 sidrar::info_sidra(x = 2093)

@@ -6,6 +6,10 @@ easypackages::packages('data.table'
                        ,'ggplot2'
                        ,'ipeaplot'
                        ,'patchwork')
+library(showtext)
+
+showtext_auto()
+showtext_opts(dpi = 300)
 
 #' @convencoes Pallete
 #' @param gender = "Reds"
@@ -242,8 +246,6 @@ dados_acid_all[,rel_100k := round(deaths / (pop / 1000000),2)]
 # checking 
 dados_acid_all$causa_name %>% table(useNA = "always")
 dados_acid_all$year %>% table(useNA = "always")
-dados_acid_all$sexo %>% table(useNA = "always")
-dados_acid_all$AGE %>% table(useNA = "always")
 
 # filter 
 dt <- dados_acid_all[causa_name %in% c("walk","bike","total"
@@ -258,40 +260,101 @@ dt[,year_f := as.factor(gsub("^20","",year))]
 
 ggplot(dt)+
   geom_point(aes(x = year_f
-                 ,y = deaths,color = causa_name_f
+                 ,y = rel_100k,color = causa_name_f
                  ,group = causa_name_f),size = 1.0)+
   geom_line(aes(x = year_f,color = causa_name_f,
-                ,y = deaths,group = causa_name_f)
+                ,y = rel_100k,group = causa_name_f)
             ,linewidth = 0.85)+
   #scale_color_brewer(palette = "Greens")+
-  facet_wrap(vars(causa_name_f),scales = "free_y")+
-  labs(x = "Ano",#y = "Obitos a cada 100 mil hab."
-       y = "Óbitos totais"
-       ,color = "Faixa etária"
+  #facet_wrap(vars(causa_name_f))+
+  #facet_wrap(vars(causa_name_f),scales = "free_y")+
+  labs(x = "Ano",y = "Óbitos a cada 100 mil hab."
+      # y = "Óbitos totais"
+       ,color = "Modo de transporte"
        ,title = "Óbitos por modo de transporte"
        ,caption = "Total das RM da PNS de 2019. \nFonte: DATASUS.")+
-  theme_minimal()+
-  theme(legend.position = "none",
-        legend.key.width=unit(2,"line"),
-        text = element_text(family = "Times New Roman"),
-        legend.text = element_text(size = rel(0.8)
-                                   , family = "Times New Roman"
-                                   , face = "plain"),
-        legend.title = element_text(size = rel(0.95)
-                                    , family = "Times New Roman"
-                                    , face = "bold"),
-        title = element_text(size = 10
-                             , family = "Times New Roman"
-                             , face = "plain"),
-        plot.margin=unit(c(2,2,0,1),"mm"),
-        strip.text.x = element_text(size=rel(1.2)),
-        panel.grid.major.y = element_line(colour = "grey92"),
-        panel.background = element_rect(fill = "white",colour = NA))
+  ipeaplot::theme_ipea(legend.position = "none")
 
 
-ggsave("figures/datasus/obito_transporte_total.jpg"
+ggsave("figures/datasus/obito_transporte_total_freesc.jpg"
        ,width = 17.5,height = 10,units = "cm"
        ,dpi = 300,scale = 1.2)
+
+## 1.22) Ob. / 100k by mode (Geom Area) -----
+rm(list=ls())
+gc(reset = TRUE)
+dados_acid <- readr::read_rds("data/datasus/metro_by_mode_age_cor_sexo.rds")
+dados_acid <- dados_acid[!is.na(prop)]
+dados_acid[,pop := pop * prop]
+
+# filtra soh RMs da PNS
+dados_acid[,name_metro := gsub("RM ","",name_metro)]
+dados_acid[name_metro %like% "Distrito Federal"
+           ,name_metro := "Distrito Federal"]
+rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
+            "Rio de Janeiro","São Paulo","Curitiba","Porto Alegre","Distrito Federal")
+
+dados_acid <- dados_acid[name_metro %in% rm_pns,]
+
+# sum by metro
+dados_acid[causa_name == "bike" & year %in% c(2013),sum(deaths),by = .(name_metro)]
+dados_acid[causa_name == "bike" & year %in% c(2015),sum(deaths),by = .(name_metro)]
+
+unique(dados_acid$causa_name)
+# soma
+dados_acid_all <- dados_acid[,list(
+  "deaths" = sum(deaths,na.rm = TRUE),
+  "pop" = sum(pop,na.rm = TRUE)
+),by = .(causa_name,year)]
+
+dados_acid_all[,rel_100k := round(deaths / (pop / 1000000),2)]
+
+# checking 
+dados_acid_all$causa_name %>% table(useNA = "always")
+dados_acid_all$year %>% table(useNA = "always")
+
+# filter 
+dt <- dados_acid_all[!(causa_name %in% c("walk+bike","total")),]
+dt <- dados_acid_all[!(causa_name %in% c("walk","bike"
+                                       ,"moto","auto")),causa_name := "others"]
+dt[,causa_name_f := factor(causa_name
+                           ,levels = 
+                             c("auto","moto","bike","walk"
+                               ,"others")
+                           ,labels = c("Automóvel","Motocicleta",
+                                       "Bicicleta","A pé","Outros"))]
+dt[,year_f := as.factor(gsub("^20","",year))]
+
+ggplot(dt)+
+  #ggplot(data, ) + 
+  geom_area(aes(x=year, y=deaths, fill=group))
+  #geom_area(aes(x = year_f
+  #               ,y = rel_100k,color = causa_name_f
+  #               ,group = causa_name_f),size = 1.0)+
+  geom_area(aes(x = year_f,fill = causa_name_f
+                ,y = rel_100k,group = causa_name_f),
+            linewidth = 0.25
+            ,color = "black")
+  geom_line(aes(x = year_f,color = causa_name_f,
+                ,y = rel_100k,group = causa_name_f)
+            ,linewidth = 0.85)
+  #scale_color_brewer(palette = "Greens")+
+  #facet_wrap(vars(causa_name_f))+
+  #facet_wrap(vars(causa_name_f),scales = "free_y")+
+  labs(x = "Ano",y = "Óbitos a cada 100 mil hab."
+       # y = "Óbitos totais"
+       ,color = "Modo de transporte"
+       ,title = "Óbitos por modo de transporte"
+       ,caption = "Total das RM da PNS de 2019. \nFonte: DATASUS.")+
+  ipeaplot::theme_ipea(legend.position = "none")
+
+
+ggsave("figures/datasus/obito_transporte_total_cumarea.jpg"
+       ,width = 17.5,height = 10,units = "cm"
+       ,dpi = 300,scale = 1.2)
+
+
+
 ## 1.3) Ob. totais by age & mode -----------
 rm(list=ls())
 gc(reset = TRUE)
@@ -399,7 +462,7 @@ ggsave("figures/datasus/obito_totais_transporte_proportion.jpg"
        ,width = 12.5,height = 10,units = "cm"
        ,dpi = 300,scale = 1.2)
 
-## 1.4) Ob. totais by mode -----------
+## 1.4) Ob./100k by mode, facet(age) -----------
 
 rm(list=ls())
 gc(reset = TRUE)
@@ -420,8 +483,8 @@ dados_acid_all <- dados_acid[,list(
   "deaths" = sum(deaths,na.rm = TRUE)
 ),by = .(causa_name,year,AGE)]
 
-pop_rm_year <- dados_acid[,.SD[1],by = .(name_metro,year,AGE)] %>% 
-  .[,list("pop"=sum(pop,na.rm = TRUE)),by = .(year,AGE)]
+pop_rm_year <- dados_acid[,.SD[1],by = .(name_metro,year,AGE,prop)] %>% 
+  .[,list("pop"=sum(pop*prop,na.rm = TRUE)),by = .(year,AGE)]
 
 dados_acid_all  <- dados_acid_all[pop_rm_year,on = c("year","AGE")]
 
@@ -435,41 +498,44 @@ dt[,causa_name_f := factor(causa_name
                            ,labels = c("Automóvel","Motocicleta",
                                        "Bicicleta","A pé","Total"))]
 dt[,year_f := as.factor(gsub("^20","",year))]
-
+dt[,rel_100k := round(deaths / (pop / 1000000),2)]
 
 ggplot(dt[causa_name %in% c("walk","bike")])+
   geom_area(aes(x = year_f,group = causa_name_f
-                ,y = deaths,fill = causa_name_f),
+                ,y = rel_100k,fill = causa_name_f),
             linewidth = 0.25
             ,color = "black")+
   scale_fill_brewer(palette = "Greens")+
-  facet_wrap(vars(AGE),scales = "free_y")+
-  labs(x = "Ano",y = "Obitos totais"
+  facet_wrap(vars(AGE),scales = "free_y",ncol = 2)+
+  labs(x = "Ano",title = "Óbitos totais por faixa etária"
        ,fill = "Modo transporte"
-       ,title = "Óbitos por faixa etária"
+       ,y = "Óbitos a cada \n100 mil habitantes"
        ,caption = "Soma das RM da PNS de 2019. \nFonte: DATASUS.")+
-  theme_minimal()+
-  theme(legend.position = "bottom",
-        legend.key.width=unit(2,"line"),
-        text = element_text(family = "Times New Roman"),
-        legend.text = element_text(size = rel(0.8)
-                                   , family = "Times New Roman"
-                                   , face = "plain"),
-        legend.title = element_text(size = rel(0.95)
-                                    , family = "Times New Roman"
-                                    , face = "bold"),
-        title = element_text(size = 10
-                             , family = "Times New Roman"
-                             , face = "plain"),
-        plot.margin=unit(c(2,2,0,1),"mm"),
-        strip.text.x = element_text(size=rel(1.2)),
-        panel.grid.major.y = element_line(colour = "grey92"),
-        panel.background = element_rect(fill = "white",colour = NA))
+  ipeaplot::theme_ipea(legend.position = "bottom")
+  # theme_minimal()+
+  # theme(legend.position = "bottom",
+  #       legend.key.width=unit(2,"line"),
+  #       text = element_text(family = "Times New Roman"),
+  #       legend.text = element_text(size = rel(0.8)
+  #                                  , family = "Times New Roman"
+  #                                  , face = "plain"),
+  #       legend.title = element_text(size = rel(0.95)
+  #                                   , family = "Times New Roman"
+  #                                   , face = "bold"),
+  #       title = element_text(size = 10
+  #                            , family = "Times New Roman"
+  #                            , face = "plain"),
+  #       plot.margin=unit(c(2,2,0,1),"mm"),
+  #       strip.text.x = element_text(size=rel(1.2)),
+  #       panel.grid.major.y = element_line(colour = "grey92"),
+  #       panel.background = element_rect(fill = "white",colour = NA))
 
-
-ggsave("figures/datasus/obito_totais_idade_ativ.jpg"
-       ,width = 15,height = 12,units = "cm"
+ggsave("figures/datasus/obito_100k_idade_ativ.jpg"
+       ,width = 12,height = 15,units = "cm"
        ,dpi = 300,scale = 1.2)
+#ggsave("figures/datasus/obito_100k_idade_ativ.jpg"
+#       ,width = 15,height = 12,units = "cm"
+#       ,dpi = 300,scale = 1.2)
 ### Proportion ----
 ggplot(dt[causa_name != "total"])+
   geom_area(aes(x = year_f,group = causa_name_f
@@ -832,74 +898,103 @@ rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
 
 dados_acid <- dados_acid[name_metro %in% rm_pns,]
 
+### read proportion ----
+ibge_2010 <- readr::read_rds("data-raw/sidrar/censo_2010_RM.rds")
+ibge_2010 <- ibge_2010[!is.na(name_metro)]
+ibge_2010[,sum(prop),by = .(name_metro)] # should be always one
+ibge_2010[,name_metro := gsub("RM ","",name_metro)]
+ibge_2010[name_metro %like% "Distrito Federal"
+           ,name_metro := "Distrito Federal"]
+rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
+            "Rio de Janeiro","São Paulo","Curitiba","Porto Alegre","Distrito Federal")
+
+ibge_2010 <- ibge_2010[name_metro %in% rm_pns,]
+ibge_2010 <- ibge_2010[,list("pop_rm" = sum(pop,na.rm = TRUE))
+                       ,by = .(sexo)]
+ibge_2010[,prop_rm := pop_rm/sum(pop_rm)]
+
+### read projection of RM region ----
+dt_metro <- readr::read_rds("data-raw/sidrar/read_metro_area.rds")
+dt_metro <- dt_metro[,.SD,.SDcols = c('code_muni','name_metro')]
+
+proj <- readr::read_rds("data-raw/sidrar/pop_2011_to_2021.rds")
+proj <- proj[dt_metro,on = c('municipio_codigo'  = 'code_muni')]
+proj <- proj[,list("pop" = sum(valor,na.rm = TRUE)),by = .(year,name_metro)]
+proj[,name_metro := gsub("RM ","",name_metro)]
+proj[name_metro %like% "Distrito Federal",name_metro := "Distrito Federal"]
+
+rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
+            "Rio de Janeiro","São Paulo","Curitiba","Porto Alegre","Distrito Federal")
+proj <- proj[name_metro %in% rm_pns,]
+proj <- proj[,list("pop" = sum(pop,na.rm = TRUE)),by = year]
+### merge data  ----
 dados_acid_all <- dados_acid[,list(
-  "deaths" = sum(deaths,na.rm = TRUE),
-  "pop"= pop[1]
+  "deaths" = sum(deaths,na.rm = TRUE)
 ),by = .(causa_name,year,sexo)]
 
-dados_acid_all[,causa_name_f := factor(causa_name
+dt <- data.table::merge.data.table(
+  x = dados_acid_all
+  ,y = ibge_2010[,.SD,.SDcols = c("sexo","prop_rm")]
+  ,by = "sexo"
+) %>% 
+  data.table::merge.data.table(
+    x = .    ,y = proj    ,by = "year")
+dt[,pop := pop * prop_rm]
+dt[,rel_100k := round(deaths / (pop / 1000000),2)]
+# filter
+dt[,causa_name_f := factor(causa_name
                            ,levels = 
                              c("auto","moto","bike","walk"
                                ,"total")
                            ,labels = c("Automóvel","Motocicleta",
                                        "Bicicleta","A pé","Total"))]
-dt <- dados_acid_all[(causa_name %in% c("walk","bike")) & 
+dt <- dt[(causa_name %in% c("walk","bike")) & 
                        sexo != "Sem declaração",]
 
 dt[,year_f := as.factor(gsub("^20","",year))]
 
 ggplot(dt)+
   geom_line(aes(x = year_f,group = causa_name_f
-               ,y = deaths,color = causa_name_f),
+               ,y = rel_100k,color = causa_name_f),
            linewidth = 1
            #,color = "black"#,position =  "identity"
            )+
+  geom_point(aes(x = year_f,group = causa_name_f
+                ,y = rel_100k,color = causa_name_f),
+            size = 2
+            #,color = "black"#,position =  "identity"
+  )+
   geom_text(aes(x = year_f
-                ,y = fcase(causa_name_f == "A pé" & sexo == "Homens"  , 1.05*deaths,
-                           causa_name_f == "A pé" & sexo == "Mulheres", 1.20*deaths,
-                           causa_name_f == "Bicicleta" & sexo == "Homens"  , 1.05*deaths,
-                           causa_name_f == "Bicicleta" & sexo == "Mulheres" & year_f == "2015", 3*deaths,
-                           causa_name_f == "Bicicleta" & sexo == "Mulheres", 1.50*deaths)
-                ,label = deaths),size = 3
-            ,family = "Times New Roman")+
-  scale_color_brewer(palette = "Blues")+
+                ,y = fcase(causa_name_f == "A pé" & sexo == "Homens"  , 1.1*rel_100k,
+                           causa_name_f == "A pé" & sexo == "Mulheres", 1.3*rel_100k,
+                           causa_name_f == "Bicicleta" & sexo == "Homens"  , 1.10*rel_100k,
+                           causa_name_f == "Bicicleta" & sexo == "Mulheres" & year_f == "2015", 3.2*rel_100k,
+                           causa_name_f == "Bicicleta" & sexo == "Mulheres", 1.70*rel_100k)
+                ,label = round(rel_100k,1)),size = 2.75)+
+  #scale_color_brewer(palette = "Blues")+
+  ipeaplot::scale_fill_ipea(palette = "Blue")+
   ggh4x::facet_grid2(rows = vars(causa_name_f)
                      ,cols = vars(sexo)
                      ,scales = "free")+
-  labs(x = "Ano",y = "Obitos totais"
+  labs(x = "Ano",y = "Óbitos a cada
+       100 mil habilitantes"
        ,color = "Modo transporte"
        ,title = "Óbitos conforme sexo"
        ,caption = "Soma das RM da PNS de 2011-2021. \nFonte: DATASUS.")+
-  theme_minimal()+
-  theme(legend.position = "bottom",
-        legend.key.width=unit(2,"line"),
-        text = element_text(family = "Times New Roman"),
-        legend.text = element_text(size = rel(0.8)
-                                   , family = "Times New Roman"
-                                   , face = "plain"),
-        legend.title = element_text(size = rel(0.95)
-                                    , family = "Times New Roman"
-                                    , face = "bold"),
-        title = element_text(size = 10
-                             , family = "Times New Roman"
-                             , face = "plain"),
-        plot.margin=unit(c(2,2,0,1),"mm"),
-        strip.text.x = element_text(size=rel(1.2), family = "Times New Roman"),
-        panel.grid.major.y = element_line(colour = "grey92"),
-        panel.background = element_rect(fill = "white",colour = NA))
+  ipeaplot::theme_ipea(legend.position = "bottom")
 
 ggsave("figures/datasus/activ_ano.jpg"
        ,width = 15,height = 12,units = "cm"
        ,dpi = 300,scale = 1.2)
 
-### Proportion -----------
+### * plot -----------
 
 ggplot(dt)+
   geom_col(aes(x = factor(year_f)
                ,y = deaths,fill = causa_name_f),
            linewidth = 0.25
            ,color = "black",position =  "fill")+
-  scale_fill_brewer(palette = "Blues")+
+  #scale_fill_brewer(palette = "Blues")+
   scale_y_continuous(labels = scales::percent)+
   facet_wrap(vars(sexo),scales = "free")+
   labs(x = "Ano",y = "Percentual (%)"
@@ -928,6 +1023,7 @@ ggsave("figures/datasus/activ_ano_proportion.jpg"
        ,width = 15,height = 9,units = "cm"
        ,dpi = 300,scale = 1.2)
 ## 2.2) Ob. totais by race & gender -----------
+
 rm(list=ls())
 gc(reset = TRUE)
 dados_acid <- readr::read_rds("data/datasus/metro_by_mode_age_cor_sexo.rds")
@@ -936,97 +1032,179 @@ dados_acid <- readr::read_rds("data/datasus/metro_by_mode_age_cor_sexo.rds")
 dados_acid[,name_metro := gsub("RM ","",name_metro)]
 dados_acid[name_metro %like% "Distrito Federal"
            ,name_metro := "Distrito Federal"]
+
 rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
             "Rio de Janeiro","São Paulo","Curitiba","Porto Alegre","Distrito Federal")
 
 dados_acid <- dados_acid[name_metro %in% rm_pns,]
 
+### read proportion ----
+ibge_2010 <- readr::read_rds("data-raw/sidrar/censo_2010_RM.rds")
+ibge_2010 <- ibge_2010[!is.na(name_metro)]
+ibge_2010[,sum(prop),by = .(name_metro)] # should be always one
+ibge_2010[,name_metro := gsub("RM ","",name_metro)]
+ibge_2010[name_metro %like% "Distrito Federal"
+          ,name_metro := "Distrito Federal"]
+rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
+            "Rio de Janeiro","São Paulo","Curitiba","Porto Alegre","Distrito Federal")
 
-dados_acid <- dados_acid[,list(
+ibge_2010 <- ibge_2010[name_metro %in% rm_pns,]
+ibge_2010 <- ibge_2010[,list("pop_rm" = sum(pop,na.rm = TRUE))
+                       ,by = .(sexo,cor)]
+ibge_2010[,prop_rm := pop_rm/sum(pop_rm)]
+
+### read projection of RM region ----
+dt_metro <- readr::read_rds("data-raw/sidrar/read_metro_area.rds")
+dt_metro <- dt_metro[,.SD,.SDcols = c('code_muni','name_metro')]
+
+proj <- readr::read_rds("data-raw/sidrar/pop_2011_to_2021.rds")
+proj <- proj[dt_metro,on = c('municipio_codigo'  = 'code_muni')]
+proj <- proj[,list("pop" = sum(valor,na.rm = TRUE)),by = .(year,name_metro)]
+proj[,name_metro := gsub("RM ","",name_metro)]
+proj[name_metro %like% "Distrito Federal",name_metro := "Distrito Federal"]
+
+rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
+            "Rio de Janeiro","São Paulo","Curitiba","Porto Alegre","Distrito Federal")
+proj <- proj[name_metro %in% rm_pns,]
+proj <- proj[,list("pop" = sum(pop,na.rm = TRUE)),by = year]
+
+### merge data  ----
+dados_acid_all <- dados_acid[,list(
   "deaths" = sum(deaths,na.rm = TRUE)
 ),by = .(causa_name,year,sexo,cor)]
 
-dt <- dados_acid[causa_name %in% c("auto","moto","bike","walk") & 
-                   cor %in% c("Branca","Negra") &
-                   sexo != "Sem declaração",]
+dt <- data.table::merge.data.table(
+  x = dados_acid_all
+  ,y = ibge_2010[,.SD,.SDcols = c("sexo","cor","prop_rm")]
+  ,by = c("sexo","cor")
+) %>% 
+  data.table::merge.data.table(
+    x = .    ,y = proj    ,by = "year")
+dt[,pop := pop * prop_rm]
+dt[,rel_100k := round(deaths / (pop / 1000000),2)]
+# filter
 dt[,causa_name_f := factor(causa_name
                            ,levels = 
-                             c("auto","moto","bike","walk"
-                               ,"total")
-                           ,labels = c("Automóvel","Motocicleta",
-                                       "Bicicleta","A pé","Total"))]
+                             c("walk+bike")
+                           ,labels = c("A pé e bicicleta"))]
+dt <- dt[(causa_name %in% c("walk+bike")) & 
+           sexo != "Sem declaração" & cor != "Sem declaração",]
+
 dt[,year_f := as.factor(gsub("^20","",year))]
 
-
-ggplot(dt[causa_name %in% c("walk","bike")])+
-  geom_col(aes(x = factor(year_f)
-               ,y = deaths,fill = causa_name_f),
-           linewidth = 0.25
-           ,color = "black",position =  "stack")+
-  #scale_y_continuous(labels = scales::percent)+
-  scale_fill_brewer(palette = "Purples")+
-  ggh4x::facet_grid2(rows = vars(sexo)
-                     ,cols = vars(cor))+
-  labs(x = "Ano",y = "Obitos totais"
-       ,fill = "Modo transporte"
-       ,title = "Óbitos conforme sexo e raça"
+### * plot ----
+ggplot(dt[cor %in% c("Branca","Negra"),])+
+  geom_line(aes(x = year_f,group = cor
+                ,y = rel_100k,color = cor),
+            linewidth = 1
+            #,color = "black"#,position =  "identity"
+  )+
+  geom_point(aes(x = year_f,group = cor
+                 ,y = rel_100k,color = cor),
+             size = 2
+             #,color = "black"#,position =  "identity"
+  )+
+  geom_text(aes(x = year_f
+                ,y = fcase(cor == "Branca" & sexo == "Homens"  , 4 + rel_100k,
+                           cor == "Branca" & sexo == "Mulheres", 4 + rel_100k,
+                           cor == "Negra" & sexo == "Homens"  , 4 + rel_100k,
+                           cor == "Negra" & sexo == "Mulheres", 4 + rel_100k)
+                ,label = round(rel_100k,1)),size = 2.75)+
+  #scale_color_brewer(palette = "Blues")+
+  ipeaplot::scale_color_ipea(palette = "Blue")+
+  ggh4x::facet_grid2(rows = vars(cor)
+                     ,cols = vars(sexo)
+                     ,scales = "fixed")+
+  labs(x = "Ano",y = "Óbitos a cada
+       100 mil habilitantes"
+       ,color = "Cor ou rança"
+       ,title = "Óbitos conforme sexo"
        ,caption = "Soma das RM da PNS de 2011-2021. \nFonte: DATASUS.")+
-  theme_minimal()+
-  theme(legend.position = "bottom",
-        legend.key.width=unit(2,"line"),
-        text = element_text(family = "Times New Roman"),
-        legend.text = element_text(size = rel(0.8)
-                                   , family = "Times New Roman"
-                                   , face = "plain"),
-        legend.title = element_text(size = rel(0.95)
-                                    , family = "Times New Roman"
-                                    , face = "bold"),
-        title = element_text(size = 10
-                             , family = "Times New Roman"
-                             , face = "plain"),
-        plot.margin=unit(c(2,2,0,1),"mm"),
-        strip.text.x = element_text(size=rel(1.2)),
-        panel.grid.major.y = element_line(colour = "grey92"),
-        panel.background = element_rect(fill = "white",colour = NA))
+  ipeaplot::theme_ipea(legend.position = "bottom")
 
 ggsave("figures/datasus/activ_sexo_cor_total.jpg"
        ,width = 15,height = 12,units = "cm"
        ,dpi = 300,scale = 1.2)
 
+
+
+
+
 ### Proportion -----
-ggplot(dt[causa_name %in% c("walk","bike")])+
+dt <- data.table::merge.data.table(
+  x = dados_acid_all
+  ,y = ibge_2010[,.SD,.SDcols = c("sexo","cor","prop_rm")]
+  ,by = c("sexo","cor")
+) %>% 
+  data.table::merge.data.table(
+    x = .    ,y = proj    ,by = "year")
+dt[,pop := pop * prop_rm]
+dt[,rel_100k := round(deaths / (pop / 1000000),2)]
+
+# filter
+dt$causa_name %>% unique()
+dt <- dt[!(causa_name %in% c('walk+bike','total'))]
+dt[!(causa_name %in% c("auto","moto","bike","walk"))
+   ,causa_name := "outros"]
+dt
+dt[,causa_name_f := factor(causa_name
+                           ,levels = 
+                             c("auto","moto","bike","walk"
+                               ,"outros")
+                           ,labels = c("Automóvel","Motocicleta",
+                                       "Bicicleta","A pé","Outros"))]
+
+dt <- dt[sexo != "Sem declaração" & cor %in% c("Branca","Negra"),]
+
+dt[,year_f := as.factor(gsub("^20","",year))]
+
+ggplot(dt[cor %in% c('Branca', 'Negra') & causa_name != "total"])+
   geom_col(aes(x = factor(year_f)
-               ,y = deaths,fill = causa_name_f),
+               ,y = rel_100k,fill = causa_name_f),
            linewidth = 0.25
-           ,color = "black",position =  "fill")+
-  scale_y_continuous(labels = scales::percent)+
-  scale_fill_brewer(palette = "Purples")+
+           ,color = "black")+
+  #scale_y_continuous(labels = scales::percent)+
+  #scale_color_brewer(palette = "Blues")+
+  ipeaplot::scale_fill_ipea(palette = "Red-Blue-White")+
   ggh4x::facet_grid2(rows = vars(sexo)
                      ,cols = vars(cor)
                      ,scales = "free")+
-  labs(x = "Ano",y = "Obitos totais"
-       ,fill = "Modo transporte"
+  labs(x = "Ano"
+       ,y = "Óbitos a cada
+       100 mil habilitantes"
+       #, y = "Proporção (%)"
+       ,fill = "Cor ou rança"
        ,title = "Óbitos conforme sexo e raça"
        ,caption = "Soma das RM da PNS de 2011-2021. \nFonte: DATASUS.")+
-  theme_minimal()+
-  theme(legend.position = "bottom",
-        legend.key.width=unit(2,"line"),
-        text = element_text(family = "Times New Roman"),
-        legend.text = element_text(size = rel(0.8)
-                                   , family = "Times New Roman"
-                                   , face = "plain"),
-        legend.title = element_text(size = rel(0.95)
-                                    , family = "Times New Roman"
-                                    , face = "bold"),
-        title = element_text(size = 10
-                             , family = "Times New Roman"
-                             , face = "plain"),
-        plot.margin=unit(c(2,2,0,1),"mm"),
-        strip.text.x = element_text(size=rel(1.2)),
-        panel.grid.major.y = element_line(colour = "grey92"),
-        panel.background = element_rect(fill = "white",colour = NA))
+  ipeaplot::theme_ipea(legend.position = "bottom")
+
 
 ggsave("figures/datasus/activ_sexo_cor_proportion.jpg"
+       ,width = 15,height = 12,units = "cm"
+       ,dpi = 300,scale = 1.2)
+
+ggplot(dt[cor %in% c('Branca', 'Negra') & causa_name != "total"])+
+  geom_col(aes(x = factor(year_f)
+               ,y = deaths,fill = causa_name_f),
+           linewidth = 0.25
+           ,color = "black",position = "fill")+
+  scale_y_continuous(labels = scales::percent)+
+  #scale_color_brewer(palette = "Blues")+
+  ipeaplot::scale_fill_ipea(palette = "Red-Blue-White")+
+  ggh4x::facet_grid2(rows = vars(sexo)
+                     ,cols = vars(cor)
+                     ,scales = "free")+
+  labs(x = "Ano"
+      #,y = "Óbitos a cada
+      #100 mil habilitantes"
+      , y = "Proporção (%)"
+       ,fill = "Cor ou rança"
+       ,title = "Óbitos conforme sexo e raça"
+       ,caption = "Soma das RM da PNS de 2011-2021. \nFonte: DATASUS.")+
+  ipeaplot::theme_ipea(legend.position = "bottom")
+
+ 
+ggsave("figures/datasus/all-modes_sexo_cor_proportion.jpg"
        ,width = 15,height = 12,units = "cm"
        ,dpi = 300,scale = 1.2)
 
