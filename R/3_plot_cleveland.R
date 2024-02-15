@@ -968,10 +968,14 @@ single_dt2
 single_dt2[
   ,edugroup_f := factor(
     x = edugroup
-    ,levels = c("Sem instrução + Fundamental incompleto","Médio completo"
-                ,"Fundamental completo","Superior completo")
-    ,labels = c("Sem instrução","Médio completo"
-                ,"Fundamental completo","Superior completo")
+    ,levels = c("Sem instrução + Fundamental incompleto"
+                ,"Fundamental completo"
+                ,"Médio completo"
+                ,"Superior completo")
+    ,labels = c("Sem instrução"
+                ,"Fundamental completo"
+                ,"Médio completo"
+                ,"Superior completo")
   )]
 
 
@@ -995,8 +999,9 @@ single_dt2[edugroup == "Superior completo" &
              ano == 2019,round(mean * 100 ,1),by = sexo]
 
 # plot
+  
 pf <- ggplot(data = single_dt2
-             ,aes(
+             , aes(
                x = ano_f    
                , y = mean
                , group = edugroup_f 
@@ -1016,7 +1021,7 @@ pf <- ggplot(data = single_dt2
     )
     ,shape = 19
     ,position = position_dodge(width = 0.10)) +
-  geom_ribbon(
+  geom_ribbon( show.legend = FALSE,
     aes(
       ymin = ci_l
       , ymax = ci_u
@@ -1028,27 +1033,13 @@ pf <- ggplot(data = single_dt2
   # text
   geom_text(data = single_dt2[ano %in% c(2008),]
             ,aes(x = ano_f, y = mean, label = round(100*mean,1)
-            ),size = 2.25,nudge_x =-.15) +
+            ),size = 2.25,nudge_x =-.2) +
   geom_text(data = single_dt2[ano %in% c(2019),]
             ,aes(x = ano_f, y = mean, label = round(100*mean,1)
-            ),size = 2.25,nudge_x =+.15) +
-  scale_y_continuous(labels = scales::percent)+
+            ),size = 2.25,nudge_x =+.2) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, .41))+
   facet_wrap(facets = ~sexo_f
-             ,nrow = 2)+
-  #scale_color_manual(values = c(
-  #  '#620C1A'
-  #  ,'#111F4F'
-  #  ,'#C29365'
-  #  ,'#6A9BB3'
-  #))+
-  #scale_fill_manual(values = c(
-  #  '#620C1A'
-  #  ,'#111F4F'
-  #  ,'#C29365'
-  #  ,'#6A9BB3'
-#))+
-viridis::scale_color_viridis(discrete = TRUE,alpha = 1,option = "H")+
-  viridis::scale_fill_viridis(discrete = TRUE,alpha = 1,option = "H")+
+             ,nrow = 1)+
   labs(
     #title = 'Proporção das pessoas que se deslocam a pé ou de bicicleta'
     #, subtitle = "Escolaridade e sexo"
@@ -1061,8 +1052,9 @@ viridis::scale_color_viridis(discrete = TRUE,alpha = 1,option = "H")+
   guides(color = guide_legend(
     override.aes = list(linetype = 0))
     , fill = "none")+
-  theme(text = ggplot2::element_text(family = "Frutiger-LT-55-Roman"))+
-  ipeaplot::theme_ipea()
+  ipeaplot::theme_ipea(legend.position = 'bottom') +
+  ipeaplot::scale_color_ipea(palette = 'Orange-Blue-White') +
+  ipeaplot::scale_fill_ipea(palette = 'Orange-Blue-White')
 pf  
 #theme_minimal()+   
 #theme(legend.key.width=unit(2,"line"),
@@ -1083,9 +1075,9 @@ pf
 
 
 
-ggsave(pf,filename = "figures/prop_escolaridade_sexo.jpg"
-       ,width = 15
-       ,height = 12
+ggsave(pf,filename = "figures/prop_escolaridade_sexo.png"
+       ,width = 16
+       ,height = 10
        ,scale = 1.2
        ,units = "cm"
        ,dpi = 300)
