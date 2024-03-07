@@ -35,6 +35,7 @@ filter_datasus <- function(filepath){
   dt[, CAUSABAS_UNIQUE_2d := substring(CAUSABAS_UNIQUE, 1,3)]
   
   # test
+  dt[grepl("^V0",CAUSABAS_UNIQUE) ,]$CAUSABAS_UNIQUE_2d %>% unique()
   dt[grepl("^V0",CAUSABAS_UNIQUE) ,]$CAUSABAS_UNIQUE %>% unique()
   my_list <- list(
     #' @V01-V09 Pedestre traumatizado em um acidente de transporte
@@ -175,7 +176,7 @@ filter_datasus <- function(filepath){
                       , paste0("V89", 0:3)
   )
   
- # dt[ CAUSABAS_UNIQUE %in% not_transport, causa_name := NA]
+  dt[ CAUSABAS_UNIQUE %in% not_transport, causa_name := NA]
   table(dt$causa_name, useNA = 'always')
   
   
@@ -286,13 +287,13 @@ rm(list=ls())
 dt_merge <- readr::read_rds("data/datasus/deaths_cor_age_sexo.rds")
 
 # check capitals
-330455 # rj
-355030 # SP
-310620 # bh
-410690 # cwb
+ # rj 330455
 dt_merge[causa_name == "bike" & code_muni_sus == 330455,sum(num_acid),by = .(year)]
+ # SP355030
 dt_merge[causa_name == "bike" & code_muni_sus == 355030,sum(num_acid),by = .(year)]
+# bh 310620 
 dt_merge[causa_name == "bike" & code_muni_sus == 310620,sum(num_acid),by = .(year)]
+# cwb 410690 
 dt_merge[causa_name == "bike" & code_muni_sus == 410690,sum(num_acid),by = .(year)]
 
 # compare data
