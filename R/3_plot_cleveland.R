@@ -8,10 +8,11 @@ library(readr)
 library(data.table)
 library(magrittr)
 library(patchwork)
-library(openxlsx)
+library(dplyr)
 library(showtext)
 library(ggthemes)
 library(ipeaplot) # remotes::install_github("ipeadata-lab/ipeaplot")
+library(openxlsx)
 
 showtext_auto()
 showtext_opts(dpi = 300)
@@ -666,6 +667,7 @@ p4 <-
       , fill = agegroup_f
       , group = agegroup_f
     )
+    , show.legend = FALSE
     ,position = position_dodge(width = .1)
     ,shape = 21) +
   scale_y_continuous(labels = scales::percent
@@ -683,8 +685,7 @@ p4 <-
   ipeaplot::scale_fill_ipea(palette = 'Green') +
   ipeaplot::theme_ipea(legend.position = 'bottom') 
 
-showtext_auto()
-showtext_opts(dpi = 300)
+p4
 
 ggsave(p4,
        filename = "./figures/prop_idade_sexo_v2.png"
@@ -696,9 +697,7 @@ ggsave(p4,
 
 
 
-png("./figures/prop_idade_sexo_v222.png", width = 15,height = 12, units = "cm", res=300)
-print(p4)
-dev.off()
+
 
 
 # 4) prop ~ sexo + RACA + dummeyMetro----------
@@ -809,7 +808,7 @@ ggplot(data = single_dt2
       , ymax = ci_u
       , color = label
     )
-    ,position = position_dodge(width = 0)
+    , show.legend = FALSE
     ,shape = 19) +
   geom_ribbon(
     aes(
@@ -832,17 +831,17 @@ ggplot(data = single_dt2
   scale_y_continuous(labels = scales::percent
                      ,limits = c(0,max(single_dt2$ci_u)))+
   scale_color_manual(values = c(
-    '#620C1A'
-    ,'#C29365'
-    ,'#111F4F'
-    ,'#6A9BB3'
-  ))+
-  scale_fill_manual(values = c(
-    '#620C1A'
-    ,'#C29365'
-    ,'#111F4F'
-    ,'#6A9BB3'
-  ))+
+     '#9e3d2f'
+    ,'#fcad5f'
+    ,'#2b5c8f'
+    ,'#95c5ef'
+    ))+
+    scale_fill_manual(values = c(
+       '#9e3d2f'
+      ,'#fcad5f'
+      ,'#2b5c8f'
+      ,'#95c5ef'
+    ))+
   labs(
     #title = 'Proporção das pessoas que se deslocam a pé ou de bicicleta'
     #, subtitle = "Pessoas acima de 18 anos conforme sexo e cor/raça"
@@ -850,27 +849,8 @@ ggplot(data = single_dt2
     , x = NULL, y = "Proporção (%)"
     , color = "Sexo e Cor/raça"
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
-  )+
-  #guides(color = guide_legend(
-  #  override.aes = list(linetype = 0))
-  #  , fill = "none")+
-  # theme(text = element_text(family = "Frutiger-LT-47-LightCn"))+
+  ) +
   ipeaplot::theme_ipea(legend.position = "bottom")
-#theme_minimal()+  
-#  theme(legend.key.width=unit(2,"line"),
-#        legend.position = "bottom",
-#        text = element_text(family = "Times New Roman"),
-#        legend.text = element_text(size = rel(1)
-#                                   , family = "Times New Roman"
-#                                   , face = "plain"),
-#        legend.title = element_text(size = rel(1)
-#                                    , family = "Times New Roman"
-#                                    , face = "bold"),
-#        axis.text = element_text(size=rel(1.1)),
-#        plot.margin=unit(c(0,2,0,1),"mm"),
-#        strip.text.x = element_text(size=rel(1.2)),
-#        panel.background = element_rect(fill = "white",colour = NA))
-
 
 ggsave(filename = "figures/prop_raca_sexo_dummyMetro_values.png"
        ,width = 15
@@ -899,7 +879,7 @@ pns19 |>
        , color = "Sexo"
        , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
   ) +
-  scale_x_continuous(labels = scales::percent) +
+  scale_y_continuous(labels = scales::percent) +
   scale_color_manual(values = c('#620C1A','#111F4F'))+
   geom_text(data = pns19[sexo %in% c('Masculino'),],
             aes(x = P040_todo_trajeto, y = metro, color=sexo,
@@ -919,6 +899,14 @@ ggsave(filename = "figures/prop_raca_sexo_Metro_values.png"
        ,scale = 1.3
        ,units = "cm"
        ,dpi = 300)
+
+
+pns19_wide <- copy(pns19)
+pns19_wide[, c('ci_l', 'ci_u') := NULL]
+
+pns19_wide <- data.table::dcast(pns19_wide, metro~ sexo, value.var = 'P040_todo_trajeto')
+
+pns19_wide[, sex_ratio := Feminino / Masculino]
 
 
 
@@ -1055,25 +1043,8 @@ pf <- ggplot(data = single_dt2
   ipeaplot::theme_ipea(legend.position = 'bottom') +
   ipeaplot::scale_color_ipea(palette = 'Orange-Blue-White') +
   ipeaplot::scale_fill_ipea(palette = 'Orange-Blue-White')
+
 pf  
-#theme_minimal()+   
-#theme(legend.key.width=unit(2,"line"),
-#      text = element_text(family = "Times New Roman"),
-#      legend.text = element_text(size = rel(0.8)
-#                                 , family = "Times New Roman"
-#                                 , face = "plain"),
-#      legend.title = element_text(size = rel(0.95)
-#                                  , family = "Times New Roman"
-#                                  , face = "bold"),
-#      title = element_text(size = 10
-#                           , family = "Times New Roman"
-#                           , face = "plain"),
-#      plot.margin=unit(c(0,2,0,1),"mm"),
-#      strip.text.x = element_text(size=rel(1.2)),
-#      panel.grid.major.y = element_line(colour = "grey92"),
-#      panel.background = element_rect(fill = "white",colour = NA))
-
-
 
 ggsave(pf,filename = "figures/prop_escolaridade_sexo.png"
        ,width = 16
