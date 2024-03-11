@@ -803,7 +803,7 @@ p5 <- ggplot(data = single_dt2,
   geom_path(aes(x= factor(ano)
                 ,y = mean
                 , color = factor(quintile)
-                , group = factor(quintile))) +
+                , group = factor(quintile)), show.legend = F) +
   geom_ribbon(
     aes(
       ymin = ci_l
@@ -822,13 +822,22 @@ p5 <- ggplot(data = single_dt2,
   ,shape = 21) +
   facet_wrap(facets = ~region
              ,nrow = 2)+
-  viridis::scale_color_viridis(discrete = TRUE
-                               ,option = "D"
-                               ,direction = -1
-                               ,guide = "none")+
-  viridis::scale_fill_viridis(discrete = TRUE
-                              ,option = "D"
-                              ,direction = -1)+
+  scale_color_manual(values = c(
+    '#9e3d2f'
+    ,'#fcad5f'
+    ,'#ffdebe'
+    ,'#95c5ef'
+    ,'#2b5c8f'
+  ))+
+  scale_fill_manual(values = c(
+    '#9e3d2f'
+    ,'#fcad5f'
+    ,'#ffdebe'
+    ,'#95c5ef'
+    ,'#2b5c8f'
+  ))+
+  # ipeaplot::scale_color_ipea(palette = 'Green') +
+  # ipeaplot::scale_fill_ipea(palette = 'Green') +
   labs(
     #title = 'Proporção das pessoas que se deslocam a pé ou de bicicleta'
     title = NULL
@@ -837,7 +846,7 @@ p5 <- ggplot(data = single_dt2,
     , x = NULL, y = "Proporção (%)"
     , fill = "Quintil de\n renda"
     , caption = "Fonte: PNAD (2008), PNS (2013 e 2019)"
-  )+
+  )+ 
   ipeaplot::theme_ipea()
 
 p5
@@ -864,7 +873,8 @@ ipeaplot::save_eps(p5,
 
 
 
-# 8) prop + 2019 ~ quintil + metro  ----------
+# 6) prop + 2019 ~ quintil + metro  ----------
+
 
 # read files
 rm(list=ls())
@@ -931,6 +941,7 @@ tmp_plot[agegroup_f == "65+" & sexo == "Masculino"]
 tmp_plot[agegroup_f == "Masculino" & ano == "2019"]
 
 
+p6 <- 
 ggplot() + 
   # data
   geom_errorbar(data = tmp_plot[quintileMetro_f != 3],
@@ -940,30 +951,40 @@ ggplot() +
                   , y = metro_f
                   , xmax = ci_u
                   , color = quintileMetro_f
-                ),width = .65#, #color = "black"
-                ,position = position_dodge(width = +0.25)
-                ,alpha = 0.5) +
+                ),width = .2, color = "black"
+                ,position = position_dodge(width = +0)
+                ,alpha = 0.5, show.legend = F) +
   geom_point(data = tmp_plot,
              aes(x = mean, y = metro_f,fill = quintileMetro_f)
              , size = 3.5
              , shape = 21
-             ,position = position_dodge(width = +0.25)
+             ,position = position_dodge(width = +0)
              ,alpha = 1) +
   # text
+  geom_text(data = tmp_plot[quintileMetro_f == 1],
+            aes(x = mean,y = metro_f
+                ,label = paste0(round(100*mean,1),""))
+            ,size = 2.2,nudge_y = .32)+
   geom_text(data = tmp_plot[quintileMetro_f == 3],
             aes(x = mean,y = metro_f
                 ,label = paste0(round(100*mean,1),""))
-            ,size = 2.35,nudge_y = .32)+
+            ,size = 2.2,nudge_y = .32)+
+  geom_text(data = tmp_plot[quintileMetro_f == 5],
+            aes(x = mean,y = metro_f
+                ,label = paste0(round(100*mean,1),""))
+            ,size = 2.2,nudge_y = .32)+
   # scale
-  scale_x_continuous(labels = scales::percent)+
-  scale_fill_manual(values = c(
-    viridisLite::viridis(10)[5], "black",viridisLite::viridis(10)[10]
-  )
-  ,labels = c("1 \n(20% mais pobre)","3","5 \n(20% mais ricas)"))+
+  # scale_x_continuous(labels = scales::percent)+
+  # scale_fill_manual(values = c(
+  #   viridisLite::viridis(10)[5], "black",viridisLite::viridis(10)[10]
+  # )
+  # ,labels = c("1 \n(20% mais pobre)","3","5 \n(20% mais ricas)"))+
+  
+  scale_fill_manual(values = ipeaplot::ipea_pal(palette = 'Green', begin = 0, end = 1)(3)
+  ,labels = c("1 (20% mais pobre)","3","5 (20% mais ricas)"))+
   scale_color_manual(values = c("black","black")
-                     ,labels = c("1 \n(20% mais pobre)"
-                                 ,"5 \n(20% mais ricas)"))+
-  #facet_wrap(~sexo_f,ncol = 2)+
+                     ,labels = c("1 (20% mais pobre)"
+                                 ,"5 (20% mais ricas)"))+
   labs(
     #title = 'Proporção de pessoas que se deslocam a pé ou de bicicleta'
     #, subtitle = "Conforme região metropolitana, sexo, e quintis de renda"
@@ -973,68 +994,29 @@ ggplot() +
     , fill = "Quintil"
     , caption = "Fonte: PNS (2019)"
   )+
-  guides(fill = guide_legend(label.position = "bottom"),
-         color = "none",label = "none")+
   ipeaplot::theme_ipea(legend.position = "bottom")
-#theme_minimal()+     
-#theme(legend.position = "bottom",
-#      legend.key.width=unit(2,"line"),
-#      text = element_text(family = "Times New Roman"),
-#      legend.text = element_text(size = rel(0.8)
-#                                 , family = "Times New Roman"
-#                                 , face = "plain"),
-#      legend.title = element_text(size = rel(0.95)
-#                                  , family = "Times New Roman"
-#                                  , face = "bold"),
-#      title = element_text(size = 10
-#                           , family = "Times New Roman"
-#                           , face = "plain"),
-#      plot.margin=unit(c(0,2,0,1),"mm"),
-#      strip.text.x = element_text(size=rel(1.2)),
-#      panel.grid.major.y = element_line(colour = "grey92"),
-#      panel.background = element_rect(fill = "white",colour = NA))
 
 
-ggsave(filename = "figures/prop_quint_metro.jpg"
+
+p6
+
+ggsave(p6,
+       filename = "figures/6_prop_quint_metro.png"
        ,width = 12
        ,height = 12
        ,scale = 1.2
        ,units = "cm"
        ,dpi = 300)
 
-# plot
-ggplot(
-  data = single_dt2[quintileMetro %in% c(1:5)
-                    & metro != "Fortaleza",]
-  , aes(x = mean, y = metro_f)
-) + 
-  geom_point(
-    aes(fill = quintileMetro_f)
-    , size = 3.5
-    , shape = 21
-    ,position = position_dodge(width = +0.0)
-    ,alpha = 0.75) +
-  scale_x_continuous(labels = scales::percent)+
-  scale_fill_brewer(direction = -1)+
-  scale_color_brewer(direction = -1)+
-  facet_wrap(~sexo_f,ncol = 2)+
-  labs(
-    #title = 'Proporção de pessoas que se deslocam a pé ou de bicicleta'
-    #, subtitle = "Conforme região metropolitana, sexo, e quintis de renda"
-    title = NULL, subtitle = NULL
-    , x = "Proporção (%)"
-    , y = NULL
-    , fill = "Quintil"
-    , caption = "Fonte: PNS (2019)"
-  )+
-  guides(color = "none")+
-  theme_minimal()+   theme(legend.key.width=unit(2,"line"),         text = element_text(family = "Times New Roman"),         legend.text = element_text(size = rel(0.8)                                    , family = "Times New Roman"                                    , face = "plain"),         legend.title = element_text(size = rel(0.95)                                     , family = "Times New Roman"                                     , face = "bold"),         title = element_text(size = 10                              , family = "Times New Roman"                              , face = "plain"),         plot.margin=unit(c(0,2,0,1),"mm"),         strip.text.x = element_text(size=rel(1.2)),         panel.grid.major.y = element_line(colour = "grey92"),         panel.background = element_rect(fill = "white",colour = NA),         legend.box.background = element_rect(fill=alpha('white', 0.7),                                              colour = "#A09C9C",                                              linewidth = 0.5,                                              linetype = "solid"))
+
+ipeaplot::save_eps(p6,
+                   file.name = "figures/6_prop_quint_metro.eps"
+                   ,width = 15
+                   ,height = 10
+                   ,scale = 1.3
+                   ,units = "cm"
+                   ,dpi = 300)
 
 
-ggsave(filename = "figures/prop_quint_metro_sexo1.jpg"
-       ,width = 15
-       ,height = 12
-       ,scale = 1.2
-       ,units = "cm"
-       ,dpi = 300)
+
 
