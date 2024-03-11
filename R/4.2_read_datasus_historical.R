@@ -320,16 +320,20 @@ dt_merge$AGE %>% table(useNA = "always")
 # 3) Read censo 2010 ----
 ibge_2010 <- readr::read_rds("data-raw/sidrar/pop_2010_sexo_age_raca.rds")
 head(ibge_2010)
+
 # fix race
 setnames(ibge_2010,"cor_ou_raca","cor")
 ibge_2010[cor %in% c("Preta","Parda"),cor := "Negra"]
+
 # fix sexo
 ibge_2010[is.na(sexo),sexo := "Sem declaração"]
+
 # fix age
 ibge_2010[,idade := grupo_de_idade %>%
             gsub(" a "," - ",.) %>%
             gsub(" anos","",.) %>%
             gsub(" ou mais","+",.)]
+
 # TESTE VALORES
 ibge_2010$idade %>% table(useNA = "always")
 # # test 1
@@ -340,12 +344,14 @@ ibge_2010$idade %>% table(useNA = "always")
 # ibge_2010[(idade %in% c("70 - 79",'80+')),sum(valor,na.rm = TRUE)]
 # # total
 ibge_2010[idade %in%  c("Total"),sum(valor,na.rm = TRUE)]
+
 # remove extra intervals of age+
 sort(unique(ibge_2010$idade))
 ibge_2010 <- ibge_2010[!(idade %in% c('0 - 14','15 - 19'
                                       ,'15 - 64','65+'
                                       ,"70 - 79",'80+','Total')),]
 ibge_2010[,sum(valor,na.rm = TRUE)] # check [1] 190755723
+
 # create new age intervals
 ibge_2010[idade %in% c("0 - 4","5 - 9","10 - 14","15 - 17") , AGE :="0-17"]
 ibge_2010[idade %in% c('18 e 19','20 - 24')  , AGE :="18-24"]
@@ -355,11 +361,13 @@ ibge_2010[idade %in% c('40 - 49'), AGE :="40-49"]
 ibge_2010[idade %in% c('50 - 59'), AGE :="50-59"]
 ibge_2010[idade %in% c('60 - 69'), AGE :="60-69"]
 ibge_2010[idade %in% c('70+')    , AGE :="70+"]
+
 # check columns
 ibge_2010$year %>% table(useNA = "always")
 ibge_2010$sexo %>% table(useNA = "always")
 ibge_2010$cor %>% table(useNA = "always")
 ibge_2010$AGE %>% table(useNA = "always")
+
 # aggregate population by 
 # municipio_codigo,code_muni_sus
 # ,year,cor,sexo,AGE
@@ -381,6 +389,7 @@ ibge_2010[pop == 0,prop := 0]
 ibge_2010[,sum(prop),by = name_metro] # should be always 1
 ibge_2010[,sum(pop)]                  # 190755723
 readr::write_rds(ibge_2010,file = "data-raw/sidrar/censo_2010_RM.rds")
+
 # # 4) Pop projection & Metro Name -----
 #
 dt_pop <- readr::read_rds("data-raw/sidrar/pop_2011_to_2021.rds")
