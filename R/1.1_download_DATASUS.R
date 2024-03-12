@@ -11,15 +11,15 @@
 #' SIM	DOINF	Declarações de Óbitos infantis
 #' 
 #' 
-dir.create("../../data/transporte_ativo_2008-2019/export_datasus/")
+dir.create("data-raw/datasus/")
+library(microdatasus) # remotes::install_github("rfsaldanha/microdatasus")
 dados_ext <- microdatasus::fetch_datasus(year_start = 2011
                                          , year_end = 2021
                                          , information_system = "SIM-DOEXT")
-readr::write_rds(dados_ext,"../../data/transporte_ativo_2008-2019/export_datasus/SIM-DOEXT_2011_to_2021.rds",compress = "gz")
+readr::write_rds(dados_ext,"data-raw/datasus/SIM-DOEXT_2011_to_2021.rds",compress = "gz")
 
 dados_inf <- microdatasus::fetch_datasus(year_start = 2011
                                          ,year_end = 2021
                                          ,information_system = "SIM-DOINF")
-readr::write_rds(dados_inf,"../../data/transporte_ativo_2008-2019/export_datasus/SIM-DOINF_2011_to_2012.rds"
+readr::write_rds(dados_inf,".data-raw/datasus/SIM-DOINF_2011_to_2012.rds"
                  ,compress = "gz")
-
