@@ -261,11 +261,13 @@ filter_datasus <- function(filepath){
 
 ## Get micro data clean ------
 
-filepath <-  "../../data/transporte_ativo_2008-2019/export_datasus/SIM-DOEXT_2011_to_2021.rds"
+filepath1 <-  "data-raw/datasus/SIM-DOEXT_2011_to_2021.rds"
+filepath2 <-  "data-raw/datasus/SIM-DOINF_2011_to_2021.rds"
 
+dt_merge1 <- filter_datasus(filepath1)
+dt_merge2 <- filter_datasus(filepath2)
 
-dt_merge <- filter_datasus(filepath)
-
+dt_merge <- rbind(dt_merge1,dt_merge2)
 # check capitals
 330455 # rj
 355030 # SP
@@ -287,9 +289,9 @@ rm(list=ls())
 dt_merge <- readr::read_rds("data/datasus/deaths_cor_age_sexo.rds")
 
 # check capitals
- # rj 330455
+# rj 330455
 dt_merge[causa_name == "bike" & code_muni_sus == 330455,sum(num_acid),by = .(year)]
- # SP355030
+# SP355030
 dt_merge[causa_name == "bike" & code_muni_sus == 355030,sum(num_acid),by = .(year)]
 # bh 310620 
 dt_merge[causa_name == "bike" & code_muni_sus == 310620,sum(num_acid),by = .(year)]
@@ -320,20 +322,16 @@ dt_merge$AGE %>% table(useNA = "always")
 # 3) Read censo 2010 ----
 ibge_2010 <- readr::read_rds("data-raw/sidrar/pop_2010_sexo_age_raca.rds")
 head(ibge_2010)
-
 # fix race
 setnames(ibge_2010,"cor_ou_raca","cor")
 ibge_2010[cor %in% c("Preta","Parda"),cor := "Negra"]
-
 # fix sexo
 ibge_2010[is.na(sexo),sexo := "Sem declaração"]
-
 # fix age
 ibge_2010[,idade := grupo_de_idade %>%
             gsub(" a "," - ",.) %>%
             gsub(" anos","",.) %>%
             gsub(" ou mais","+",.)]
-
 # TESTE VALORES
 ibge_2010$idade %>% table(useNA = "always")
 # # test 1
@@ -344,14 +342,12 @@ ibge_2010$idade %>% table(useNA = "always")
 # ibge_2010[(idade %in% c("70 - 79",'80+')),sum(valor,na.rm = TRUE)]
 # # total
 ibge_2010[idade %in%  c("Total"),sum(valor,na.rm = TRUE)]
-
 # remove extra intervals of age+
 sort(unique(ibge_2010$idade))
 ibge_2010 <- ibge_2010[!(idade %in% c('0 - 14','15 - 19'
                                       ,'15 - 64','65+'
                                       ,"70 - 79",'80+','Total')),]
 ibge_2010[,sum(valor,na.rm = TRUE)] # check [1] 190755723
-
 # create new age intervals
 ibge_2010[idade %in% c("0 - 4","5 - 9","10 - 14","15 - 17") , AGE :="0-17"]
 ibge_2010[idade %in% c('18 e 19','20 - 24')  , AGE :="18-24"]
@@ -361,13 +357,11 @@ ibge_2010[idade %in% c('40 - 49'), AGE :="40-49"]
 ibge_2010[idade %in% c('50 - 59'), AGE :="50-59"]
 ibge_2010[idade %in% c('60 - 69'), AGE :="60-69"]
 ibge_2010[idade %in% c('70+')    , AGE :="70+"]
-
 # check columns
 ibge_2010$year %>% table(useNA = "always")
 ibge_2010$sexo %>% table(useNA = "always")
 ibge_2010$cor %>% table(useNA = "always")
 ibge_2010$AGE %>% table(useNA = "always")
-
 # aggregate population by 
 # municipio_codigo,code_muni_sus
 # ,year,cor,sexo,AGE
@@ -389,7 +383,6 @@ ibge_2010[pop == 0,prop := 0]
 ibge_2010[,sum(prop),by = name_metro] # should be always 1
 ibge_2010[,sum(pop)]                  # 190755723
 readr::write_rds(ibge_2010,file = "data-raw/sidrar/censo_2010_RM.rds")
-
 # # 4) Pop projection & Metro Name -----
 #
 dt_pop <- readr::read_rds("data-raw/sidrar/pop_2011_to_2021.rds")
@@ -422,11 +415,6 @@ tmp_dt_acid$AGE %>% table(useNA = "always")
 
 # ## Rbind .  ----
 
-#dados_acid <- tmp_dt_acid[, list("deaths" = sum(total_acid,na.rm = TRUE))
-#                          ,by = .(name_metro,causa_name,year,AGE,cor,sexo)]
-
-
-
 dados_acid <- rbind(
   # unique
   tmp_dt_acid[,list("deaths" = sum(total_acid,na.rm = TRUE))
@@ -447,9 +435,8 @@ tmp_dt_acid$cor %>% table(useNA = "always")
 tmp_dt_acid$AGE %>% table(useNA = "always")
 
 
-
 ## . w/ RM pop 2011-2021 ----
-tmp_pop_rm <- copy(tmp_dt_acid)[,.SD[1],by = .(valor,name_metro, municipio_codigo,year)] %>% 
+tmp_pop_rm <- copy(tmp_dt_acid)[,.SD[1],by = .(valor,name_metro, municipio_codigo,year)] %>%
   .[,.SD,.SDcols = c('valor','name_metro', 'municipio_codigo','year')]
 tmp_pop_rm <- tmp_pop_rm[,list(pop = sum(valor)),by = .(name_metro,year)]
 tmp_pop_rm[name_metro == "RM São Paulo"] # check
@@ -482,6 +469,5 @@ dados_acid[causa_name == "total",sum(pop * prop,na.rm = TRUE)
 # save data ----
 readr::write_rds(dados_acid, "./data/datasus/metro_by_mode_age_cor_sexo.rds"
                  , compress = 'gz')
-
 
 
