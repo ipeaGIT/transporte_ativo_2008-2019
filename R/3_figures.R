@@ -1023,7 +1023,7 @@ ipeaplot::save_eps(p6,
 rm(list=ls())
 gc(reset = TRUE)
 
-### read proportion ----
+### read proportion 
 ibge_2010 <- readr::read_rds("data-raw/sidrar/censo_2010_RM.rds")
 ibge_2010 <- ibge_2010[!is.na(name_metro)]
 ibge_2010[,sum(prop),by = .(name_metro)] # should be always one
@@ -1036,7 +1036,7 @@ rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
 ibge_2010 <- ibge_2010[name_metro %in% rm_pns,]
 ibge_2010 <- ibge_2010[,list("pop_rm" = sum(pop,na.rm = TRUE))]
 
-### read projection of RM region ----
+### read projection of RM region 
 dt_metro <- readr::read_rds("data-raw/sidrar/read_metro_area.rds")
 dt_metro <- dt_metro[,.SD,.SDcols = c('code_muni','name_metro')]
 
@@ -1051,7 +1051,7 @@ rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
 proj <- proj[name_metro %in% rm_pns,]
 proj <- proj[,list("pop" = sum(pop,na.rm = TRUE)),by = year]
 
-### read deaths data ----------
+### read deaths data 
 dados_acid <- readr::read_rds("data/datasus/metro_by_mode_age_cor_sexo.rds")
 dados_acid$year %>% unique()
 dados_acid[,name_metro := gsub("RM ","",name_metro)]
@@ -1067,7 +1067,7 @@ dados_acid_all <- dados_acid[,list(
   "deaths" = sum(deaths,na.rm = TRUE)
 ),by = .(causa_name,year)]
 
-### merge data  ----
+### merge data 
 dt <- data.table::merge.data.table(
   x = dados_acid_all,y = proj    ,by = "year")
 dt[,rel_100k := round(deaths / (pop / 100000),2)]
@@ -1079,22 +1079,37 @@ dt[,causa_name_f := factor(causa_name
                            ,labels = c("Automóvel","Motocicleta",
                                        "Bicicleta","A pé","Outros"))]
 ### plot ====
-p7 <- ggplot(dt)+
-  geom_point(aes(x = year_f
+p7 <- ggplot()+
+  geom_point(data=dt,
+             aes(x = year_f
                  ,y = rel_100k,color = causa_name_f
                  ,group = causa_name_f),size = 1.0)+
-  geom_line(aes(x = year_f,color = causa_name_f,
+  geom_line(data=dt,
+            aes(x = year_f,color = causa_name_f
                 ,y = rel_100k,group = causa_name_f)
             ,linewidth = 0.85)+
   labs(x = "Ano",y = "Óbitos a cada 100 mil hab."
        ,color = "Modo de transporte"
        ,title = "Óbitos por modo de transporte"
        ,caption = "Total das RM da PNS de 2019. \nFonte: DATASUS.")+
-  ipeaplot::theme_ipea(legend.position = "bottom")+
+  scale_x_discrete(breaks = c('11', '13', '15', '17', '19', '21'),
+                   labels = c('2011', '2013', '2015', '2017', '2019', '2021')) +
+  scale_color_manual(values = c(
+    '#2b5c8f'
+    ,'#fcad5f'
+    ,'#ffdebe'
+    ,'#9e3d2f'
+    ,'#95c5ef'
+  ))+
+  # ipeaplot::scale_color_ipea(palette = 'Orange-Blue') + 
+  ipeaplot::theme_ipea(legend.position = "bottom") +
   guides(color=guide_legend(nrow=1,byrow=TRUE,
                             title.position = "top"))
+
+p7
+
 # save
-ggsave(plot = p7,filename = "figures/7_obito_geral.jpg"
+ggsave(plot = p7,filename = "figures/7_obito_geral.png"
        ,width = 12,height = 10,units = "cm"
        ,dpi = 300,scale = 1.2)
 
@@ -1113,6 +1128,14 @@ copy(dt) %>%
   },by = .(causa_name)] %>% 
   .[]
 
+#    causa_name     rate  max  min
+# 1:       walk 66.47727 3.52 1.18
+# 2:       moto 41.20603 1.99 1.17
+# 3:       bike 36.00000 0.25 0.16
+# 4:     others 20.23810 0.84 0.67
+# 5:       auto 61.21212 1.65 0.64
+
+
 # 8) Figura 8 -----------
 
 rm(list=ls())
@@ -1129,7 +1152,7 @@ rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
 
 dados_acid <- dados_acid[name_metro %in% rm_pns,]
 
-### read proportion ----
+### read proportion
 ibge_2010 <- readr::read_rds("data-raw/sidrar/censo_2010_RM.rds")
 ibge_2010 <- ibge_2010[!is.na(name_metro)]
 ibge_2010[,sum(prop),by = .(name_metro)] # should be always one
@@ -1143,7 +1166,7 @@ ibge_2010 <- ibge_2010[name_metro %in% rm_pns,]
 ibge_2010 <- ibge_2010[,list("pop_rm" = sum(pop,na.rm = TRUE)),by=.(AGE)]
 ibge_2010[,prop_rm := pop_rm/sum(pop_rm)]
 
-### read projection of RM region ----
+### read projection of RM region
 dt_metro <- readr::read_rds("data-raw/sidrar/read_metro_area.rds")
 dt_metro <- dt_metro[,.SD,.SDcols = c('code_muni','name_metro')]
 
@@ -1158,7 +1181,7 @@ rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
 proj <- proj[name_metro %in% rm_pns,]
 proj <- proj[,list("pop" = sum(pop,na.rm = TRUE)),by = year]
 
-### merge data  ----
+### merge data
 dados_acid_all <- dados_acid[,list(
   "deaths" = sum(deaths,na.rm = TRUE)
 ),by = .(causa_name,year,AGE)]
@@ -1170,6 +1193,7 @@ dt <- data.table::merge.data.table(
     ,by = "AGE")
 dt[,pop := pop * prop_rm]
 dt[,rel_100k := round(deaths / (pop / 100000),2)]
+
 # filter
 dt[,.SD[1],by = c('AGE','year')] # view first obs
 dt$causa_name %>% unique()
@@ -1187,14 +1211,16 @@ dt[,causa_name_f := factor(causa_name
                                        "Bicicleta","A pé","Outros"))]
 dt[,year_f := as.factor(gsub("^20","",year))]
 tmp_dt <- copy(dt)[causa_name %in% c("walk","bike")]
+
 ### plot ====
 
-
 p8 <- ggplot(data = tmp_dt)+
-  geom_area(aes(x = year,group = AGE,y = deaths,fill = AGE),
+  geom_area(data = tmp_dt,
+            aes(x = year,group = AGE,y = deaths, fill = AGE),
             linewidth = 0.25
             ,color = "black")+
   scale_fill_brewer(palette = "Greens")+
+  scale_x_discrete(breaks = c('2011', '2013', '2015', '2017', '2019', '2021')) +
   facet_wrap(vars(causa_name_f),scales = "free_y",ncol = 2)+
   labs(x = "Ano",title = "Óbitos totais por faixa etária"
      ,fill = "Faixa etária"
@@ -1202,8 +1228,9 @@ p8 <- ggplot(data = tmp_dt)+
      ,caption = "Soma das RM da PNS de 2019. \nFonte: DATASUS.")+
   ipeaplot::theme_ipea(legend.position = "bottom")
 
+p8
 
-ggsave(plot = p8,filename = "figures/8_prop_age_ativo.jpg"
+ggsave(plot = p8,filename = "figures/8_prop_age_ativo.png"
        ,width = 15,height = 9,units = "cm"
        ,dpi = 300,scale = 1.2)
 
@@ -1211,6 +1238,7 @@ ipeaplot::save_eps(p8,
                    file.name = "figures/8_prop_age_ativo.eps"
                    ,width = 15,height = 9,units = "cm"
                    ,dpi = 300,scale = 1.2)
+
 
 # 9) Figura 9 -----------
 
@@ -1228,7 +1256,8 @@ rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
 
 dados_acid <- dados_acid[name_metro %in% rm_pns,]
 
-### read proportion ----
+
+### read proportion
 ibge_2010 <- readr::read_rds("data-raw/sidrar/censo_2010_RM.rds")
 ibge_2010 <- ibge_2010[!is.na(name_metro)]
 ibge_2010[,sum(prop),by = .(name_metro)] # should be always one
@@ -1243,7 +1272,8 @@ ibge_2010 <- ibge_2010[,list("pop_rm" = sum(pop,na.rm = TRUE))
                        ,by = .(sexo)]
 ibge_2010[,prop_rm := pop_rm/sum(pop_rm)]
 
-### read projection of RM region ----
+
+### read projection of RM region
 dt_metro <- readr::read_rds("data-raw/sidrar/read_metro_area.rds")
 dt_metro <- dt_metro[,.SD,.SDcols = c('code_muni','name_metro')]
 
@@ -1257,7 +1287,8 @@ rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
             "Rio de Janeiro","São Paulo","Curitiba","Porto Alegre","Distrito Federal")
 proj <- proj[name_metro %in% rm_pns,]
 proj <- proj[,list("pop" = sum(pop,na.rm = TRUE)),by = year]
-### merge data  ----
+
+### merge data
 dados_acid_all <- dados_acid[,list(
   "deaths" = sum(deaths,na.rm = TRUE)
 ),by = .(causa_name,year,sexo)]
@@ -1271,6 +1302,7 @@ dt <- data.table::merge.data.table(
     x = .    ,y = proj    ,by = "year")
 dt[,pop := pop * prop_rm]
 dt[,rel_100k := round(deaths / (pop / 100000),3)]
+
 # filter
 dt <- dt[(causa_name %in% c("walk","bike")) & 
            sexo != "Sem declaração",]
@@ -1284,13 +1316,15 @@ dt[,year_f := as.factor(gsub("^20","",year))]
 ### plot ====
 
 
-p9 <- ggplot(dt)+
-  geom_line(aes(x = year_f,group = causa_name_f
+p9 <- ggplot()+
+  geom_line(data=dt,
+            aes(x = year_f,group = causa_name_f
                 ,y = rel_100k,color = causa_name_f),
             linewidth = 1
             #,color = "black"#,position =  "identity"
   )+
-  geom_point(aes(x = year_f,group = causa_name_f
+  geom_point(data=dt,
+             aes(x = year_f,group = causa_name_f
                  ,y = rel_100k,color = causa_name_f),
              size = 2
              #,color = "black"#,position =  "identity"
@@ -1305,20 +1339,23 @@ p9 <- ggplot(dt)+
                  ,y = rel_100k,label = round(rel_100k,2)),size = 2.75
             ,angle = 25,nudge_y = 0.45
   )+
+  scale_x_discrete(breaks = c('11', '13', '15', '17', '19', '21'),
+                   labels = c('2011', '2013', '2015', '2017', '2019', '2021')) +
   #scale_color_brewer(palette = "Blues")+
-  ipeaplot::scale_fill_ipea(palette = "Blue")+
+  ipeaplot::scale_color_ipea(palette = "Green")+
   ggh4x::facet_grid2(rows = vars(causa_name_f)
                      ,cols = vars(sexo)
                      ,scales = "free")+
   labs(x = "Ano",y = "Óbitos a cada
        100 mil habilitantes"
-       ,color = "Modo transporte"
-       ,title = "Óbitos conforme sexo"
+       ,color = "Modo de transporte"
+       ,title = "Óbitos por modo de transporte e sexo"
        ,caption = "Soma das RM da PNS de 2011-2021. \nFonte: DATASUS.")+
   ipeaplot::theme_ipea(legend.position = "bottom")
 
+p9
 
-ggsave(plot = p9,filename = "figures/9_prop_sexo_ativo.jpg"
+ggsave(plot = p9,filename = "figures/9_prop_sexo_ativo.png"
        ,width = 15,height = 12,units = "cm"
        ,dpi = 300,scale = 1.2)
 
@@ -1326,6 +1363,8 @@ ipeaplot::save_eps(p9,
                    file.name = "figures/9_prop_sexo_ativo.eps"
                    ,width = 15,height = 12,units = "cm"
                    ,dpi = 300,scale = 1.2)
+
+
 
 # 10) Figura 10  -----------
 
@@ -1343,7 +1382,7 @@ rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
 
 dados_acid <- dados_acid[name_metro %in% rm_pns,]
 
-### read proportion ----
+### read proportion
 ibge_2010 <- readr::read_rds("data-raw/sidrar/censo_2010_RM.rds")
 ibge_2010 <- ibge_2010[!is.na(name_metro)]
 ibge_2010[,sum(prop),by = .(name_metro)] # should be always one
@@ -1358,7 +1397,7 @@ ibge_2010 <- ibge_2010[,list("pop_rm" = sum(pop,na.rm = TRUE))
                        ,by = .(sexo,cor)]
 ibge_2010[,prop_rm := pop_rm/sum(pop_rm)]
 
-### read projection of RM region ----
+### read projection of RM region
 dt_metro <- readr::read_rds("data-raw/sidrar/read_metro_area.rds")
 dt_metro <- dt_metro[,.SD,.SDcols = c('code_muni','name_metro')]
 
@@ -1373,7 +1412,7 @@ rm_pns <- c("Belém","Fortaleza","Recife","Salvador","Belo Horizonte",
 proj <- proj[name_metro %in% rm_pns,]
 proj <- proj[,list("pop" = sum(pop,na.rm = TRUE)),by = year]
 
-### merge data  ----
+### merge data
 dados_acid_all <- dados_acid[,list(
   "deaths" = sum(deaths,na.rm = TRUE)
 ),by = .(causa_name,year,sexo,cor)]
@@ -1397,7 +1436,9 @@ dt <- dt[(causa_name %in% c("walk+bike")) &
 
 dt[,year_f := as.factor(gsub("^20","",year))]
 
+
 ###  plot ----
+
 p10 <- ggplot(dt[cor %in% c("Branca","Negra"),])+
   geom_line(aes(x = year_f,group = cor
                 ,y = rel_100k,color = cor),
@@ -1415,8 +1456,9 @@ p10 <- ggplot(dt[cor %in% c("Branca","Negra"),])+
                            cor == "Negra" & sexo == "Homens"  , .4 + rel_100k,
                            cor == "Negra" & sexo == "Mulheres", .4 + rel_100k)
                 ,label = round(rel_100k,1)),size = 2.75)+
-  #scale_color_brewer(palette = "Blues")+
-  ipeaplot::scale_color_ipea(palette = "Blue")+
+  scale_x_discrete(breaks = c('11', '13', '15', '17', '19', '21'),
+                   labels = c('2011', '2013', '2015', '2017', '2019', '2021')) +
+  ipeaplot::scale_color_ipea(palette = "Green")+
   ggh4x::facet_grid2(cols = vars(cor)
                      ,rows = vars(sexo)
                      ,scales = "fixed")+
@@ -1427,7 +1469,9 @@ p10 <- ggplot(dt[cor %in% c("Branca","Negra"),])+
        ,caption = "Soma das RM da PNS de 2011-2021. \nFonte: DATASUS.")+
   ipeaplot::theme_ipea(legend.position = "bottom")
 
-ggsave(plot = p10,filename = "figures/10_prop_sexo_raca_ativo.jpg"
+p10
+
+ggsave(plot = p10,filename = "figures/10_prop_sexo_raca_ativo.png"
        ,width = 15,height = 12,units = "cm"
        ,dpi = 300,scale = 1.2)
 
@@ -1445,6 +1489,13 @@ copy(dt) %>%
     list("rate" =100* rate,"max" = max(rel_100k),"min" = min(rel_100k))
   },by = .(cor,sexo)] %>% 
   .[]
+
+
+#       cor     sexo     rate  max  min
+# 1: Branca   Homens 64.27015 4.59 1.64
+# 2:  Negra   Homens 60.98266 6.92 2.70
+# 3: Branca Mulheres 57.46269 1.34 0.57
+# 4:  Negra Mulheres 61.15108 1.39 0.54
 
 # End -----
 
