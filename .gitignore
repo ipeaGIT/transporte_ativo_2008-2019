@@ -5,3 +5,13 @@
 data/arquivo/*
 data-raw/PNS/*
 figures/Thumbs.db
+literature/*
+data-raw/datasus/*
+data-raw/PNAD/*
+data-raw/data
+data-raw/dicionario*
+data/pnad2008.rds
+data/pns2013_dt.rds
+data/pns2019_dt.rds
+data/export*
+data/arquivo.zip
