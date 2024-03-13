@@ -21,5 +21,4 @@ readr::write_rds(dados_ext,"data-raw/datasus/SIM-DOEXT_2011_to_2021.rds",compres
 dados_inf <- microdatasus::fetch_datasus(year_start = 2011
                                          ,year_end = 2021
                                          ,information_system = "SIM-DOINF")
-readr::write_rds(dados_inf,".data-raw/datasus/SIM-DOINF_2011_to_2012.rds"
-                 ,compress = "gz")
+readr::write_rds(dados_inf,"data-raw/datasus/SIM-DOINF_2011_to_2021.rds" ,compress = "gz")

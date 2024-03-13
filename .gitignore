@@ -3,6 +3,5 @@
 .RData
 .Ruserdata
 data/arquivo/*
-data-raw/datasus/*
 data-raw/PNS/*
 figures/Thumbs.db
