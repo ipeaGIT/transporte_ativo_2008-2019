@@ -149,7 +149,7 @@ df1b <- survey::svyby( ~ P040_todo_trajeto
 df1b
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/sit_region.rds"
+  file = "data/export_pns19/sit_region.rds"
   ,x = list(
     "sit_region_1" = df1a
     , "sit_region_2" = df1b
@@ -191,7 +191,7 @@ df2b <- survey::svyby(
 df2b
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/br.rds"
+  file = "data/export_pns19/br.rds"
   ,x = list(
     "brasil_1" = df2a
     ,"brasil_2" = df2b
@@ -234,7 +234,7 @@ df2d <- survey::svyby(
 df2d
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/sit_brasil.rds"
+  file = "data/export_pns19/sit_brasil.rds"
   ,x = list(
     "sit_brasil_1" = df2c
     ,"sit_brasil_2" = df2d
@@ -277,7 +277,7 @@ df3b <- survey::svyby(
 df3b
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/dummyMetro.rds"
+  file = "data/export_pns19/dummyMetro.rds"
   ,x = list(
     "dummyMetro_1" = df3a
     ,"dummyMetro_2" = df3b
@@ -320,7 +320,7 @@ df3d <- survey::svyby(
 df3d
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/quintileDummyMetro.rds"
+  file = "data/export_pns19/quintileDummyMetro.rds"
   ,x = list(
     "quintileDummyMetro_1" = df3c
     ,"quintileDummyMetro_2" = df3d
@@ -363,7 +363,7 @@ df4b <- survey::svyby(
 df4b
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/sexo.rds"
+  file = "data/export_pns19/sexo.rds"
   ,x = list(
     "sexo_1" = df4a
     ,"sexo_2" = df4b
@@ -392,7 +392,7 @@ df4d <- survey::svyby(
 df4d
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/sexo_age.rds"
+  file = "data/export_pns19/sexo_age.rds"
   ,x = list("sexo_age" = df4d )
   ,compress = "gz"
 )
@@ -418,7 +418,7 @@ df4d <- survey::svyby(
 df4d
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/sexo_raca_dummyMetro.rds"
+  file = "data/export_pns19/sexo_raca_dummyMetro.rds"
   ,x = list("sexo_raca_dummyMetro" = df4d )
   ,compress = "gz"
 )
@@ -442,7 +442,7 @@ df4_metro <- survey::svyby(
 df4_metro
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/sexo_raca_Metro.rds"
+  file = "data/export_pns19/sexo_raca_Metro.rds"
   ,x = list("sexo_raca_Metro" = df4_metro )
   ,compress = "gz"
 )
@@ -477,7 +477,7 @@ df4d <- survey::svyby(
 df4d
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/sexo_ageLarge.rds"
+  file = "data/export_pns19/sexo_ageLarge.rds"
   ,x = list("sexo_age" = df4d )
   ,compress = "gz"
 )
@@ -501,7 +501,7 @@ df4d <- survey::svyby(
 df4d
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/sexo_ageLarge2.rds"
+  file = "data/export_pns19/sexo_ageLarge2.rds"
   ,x = list("sexo_age" = df4d )
   ,compress = "gz"
 )
@@ -526,7 +526,7 @@ df4d <- survey::svyby(
 df4d
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/sexo_ageLarge3.rds"
+  file = "data/export_pns19/sexo_ageLarge3.rds"
   ,x = list("sexo_age" = df4d )
   ,compress = "gz"
 )
@@ -578,7 +578,7 @@ df4d[,sum(P040_todo_trajeto),by = edugroup]
 
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/sexo_esc.rds"
+  file = "data/export_pns19/sexo_esc.rds"
   ,x = list("sexo_esc" = df4d )
   ,compress = "gz"
 )
@@ -605,7 +605,7 @@ df4d <- survey::svyby(
 df4d
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/raca_esc.rds"
+  file = "data/export_pns19/raca_esc.rds"
   ,x = list("raca_esc" = df4d )
   ,compress = "gz"
 )
@@ -629,7 +629,7 @@ df4d <- survey::svyby(
 df4d
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/sexo_metro_quint.rds"
+  file = "data/export_pns19/sexo_metro_quint.rds"
   ,x = df4d
   ,compress = "gz"
 )
@@ -653,7 +653,7 @@ df5b <- survey::svyby(
 df5b
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/metro_quint.rds"
+  file = "data/export_pns19/metro_quint.rds"
   ,x = list(
     "region_quint_1" = df5b
   )
@@ -679,7 +679,7 @@ df5b <- survey::svyby(
 df5b
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/region_quint.rds"
+  file = "data/export_pns19/region_quint.rds"
   ,x = list(
     "region_quint_1" = df5b
   )
@@ -706,7 +706,7 @@ df5d <- survey::svyby(
 df5d
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/br_quint.rds"
+  file = "data/export_pns19/br_quint.rds"
   ,x = list(
     "br_quint_1" = df5d
   )
@@ -732,7 +732,7 @@ df6b <- survey::svyby(
 df6b
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/sexo_race.rds"
+  file = "data/export_pns19/sexo_race.rds"
   ,x = list("sexo_race_1" = df6b)
   ,compress = "gz"
 ) 
@@ -820,7 +820,7 @@ time_45to59 <- survey::svyby(
 time_45to59 
 
 readr::write_rds(
-  file = "../../data/transporte_ativo_2008-2019/export_pns19/time_dummy.rds"
+  file = "data/export_pns19/time_dummy.rds"
   ,x = list(
     "time_00to09" = time_00to09
     ,"time_10to19" = time_10to19

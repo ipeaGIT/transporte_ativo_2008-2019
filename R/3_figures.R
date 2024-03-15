@@ -1,7 +1,6 @@
 # load and read -----
 rm(list=ls()) 
-data_path <- "../../data/transporte_ativo_2008-2019/" 
-#data_path <- "data/"
+
 gc(reset=T)
 library(ggplot2)
 library(readr)
@@ -22,8 +21,7 @@ showtext_opts(dpi = 300)
 
 # 1) prop ~ br + metro + sit ----------
 rm(list=ls()) 
-data_path <- "../../data/transporte_ativo_2008-2019/" 
-#data_path <- "data/"
+data_path <- "./data/"
 gc(reset=T)
 # read
 pnad2008_br <- readr::read_rds(paste0(data_path,"export_pnad08/br.rds"))
@@ -241,8 +239,7 @@ ipeaplot::save_eps(p1,
 
 # read files
 rm(list=ls())
-data_path <- "../../data/transporte_ativo_2008-2019/"
-#data_path <- "data/"
+data_path <- "./data/"
 gc(reset=TRUE)
 pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/sexo_race_dummyMetro.rds"))
 pns13 <- readr::read_rds(paste0(data_path,"export_pns13/sexo_raca_dummyMetro.rds"))
@@ -411,7 +408,7 @@ ipeaplot::save_eps(gplot = p,
 
 # read files
 rm(list=ls())
-data_path <- "../../data/transporte_ativo_2008-2019/"
+data_path <- "./data/"
 
 gc(reset=TRUE)
 pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/sexo_ageLarge3.rds"))
@@ -569,7 +566,7 @@ ipeaplot::save_eps(p3,
 
 # read files
 rm(list=ls())
-data_path <- "../../data/transporte_ativo_2008-2019/"
+data_path <- "./data/"
 #data_path <- "data/"
 gc(reset=TRUE)
 pnad2008 <- readr::read_rds(paste0(data_path,"export_pnad08/sexo_esc.rds"))
@@ -726,8 +723,7 @@ ipeaplot::save_eps(p4,
 
 # read files
 rm(list=ls())
-data_path <- "../../data/transporte_ativo_2008-2019/"
-#data_path <- "data/"
+data_path <- "./data/"
 pnad2008_br <- readr::read_rds(paste0(data_path,"export_pnad08/br_quint.rds"))
 pns13_br <- readr::read_rds(paste0(data_path,"export_pns13/br_quint.rds"))
 pns19_br <- readr::read_rds(paste0(data_path,"export_pns19/br_quint.rds"))
@@ -878,8 +874,7 @@ ipeaplot::save_eps(p5,
 
 # read files
 rm(list=ls())
-data_path <- "../../data/transporte_ativo_2008-2019/"
-#data_path <- "data/"
+data_path <- "./data/"
 gc(reset=TRUE)
 
 
@@ -973,13 +968,7 @@ ggplot() +
             aes(x = mean,y = metro_f
                 ,label = paste0(round(100*mean,1),""))
             ,size = 2.2,nudge_y = .32)+
-  # scale
-  # scale_x_continuous(labels = scales::percent)+
-  # scale_fill_manual(values = c(
-  #   viridisLite::viridis(10)[5], "black",viridisLite::viridis(10)[10]
-  # )
-  # ,labels = c("1 \n(20% mais pobre)","3","5 \n(20% mais ricas)"))+
-  
+  scale_x_continuous(labels = scales::percent)+
   scale_fill_manual(values = ipeaplot::ipea_pal(palette = 'Green', begin = 0, end = 1)(3)
   ,labels = c("1 (20% mais pobre)","3","5 (20% mais ricas)"))+
   scale_color_manual(values = c("black","black")
