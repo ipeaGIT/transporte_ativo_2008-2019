@@ -1,5 +1,10 @@
 # Desativar deteccao de HTML
 *.html linguist-detectable=false
+*.eps linguist-detectable=false
+*.png linguist-detectable=false
+
+
 
 # Interpretar .rmd como R
 *.Rmd linguist-language=R
+*.rds linguist-language=R
