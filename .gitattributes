@@ -1,8 +1,6 @@
-# Desativar deteccao de HTML
+# Desativar deteccao de HTML e PostScript 
 *.html linguist-detectable=false
-*.eps linguist-detectable=false
-*.png linguist-detectable=false
-
+*.ps linguist-detectable=false
 
 
 # Interpretar .rmd como R
